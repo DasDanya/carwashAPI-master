@@ -17,6 +17,8 @@ import ru.pin120.carwashAPI.models.CategoryOfServices;
 import ru.pin120.carwashAPI.services.CategoryOfServicesService;
 import ru.pin120.carwashAPI.services.ValidateInputService;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -64,8 +66,8 @@ public class CategoryOfServicesController {
         return new ResponseEntity<>(catNames, HttpStatus.OK);
     }
 
-    @GetMapping("/getCatNamesByParameter")
-    public ResponseEntity<List<String>> getCatNamesByParameter(@RequestParam ("parameter") String parameter){
+    @GetMapping("/getCatNamesByParameter/{parameter}")
+    public ResponseEntity<List<String>> getCatNamesByParameter(@PathVariable ("parameter") String parameter){
         List<String> catNames = null;
         try{
             catNames = categoryOfServicesService.getCatNamesByParameter(parameter);

@@ -1,6 +1,7 @@
 package ru.pin120.carwashAPI.models;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -24,10 +25,13 @@ public class PriceList {
 
     @NotNull(message = "Необходимо указать цену")
     @PositiveOrZero(message = "Цена не может быть отрицательной")
+    @Min(value = 1, message = "Минимальная стоимость = 1 ₽")
+    @Max(value = 50000, message = "Минимальная стоимость = 50000 ₽")
     private Integer plPrice;
 
     @NotNull(message = "Необходимо указать время выполнения")
     @Min(value = 1, message = "Минимальное время выполнения - 1 минута")
+    @Max(value = 1440, message = "Максимальное время выполнения - 1 день")
     private Integer plTime;
 
 

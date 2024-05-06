@@ -22,8 +22,9 @@ public interface CategoryOfTransportRepository extends PagingAndSortingRepositor
 
     void deleteByCatTrName(String catTrName);
 
-    List<CategoryOfTransport> findByCatTrNameContainsIgnoreCase(String catTrName);
+    List<CategoryOfTransport> findByCatTrNameContainsIgnoreCaseOrderByCatTrNameAsc(String catTrName);
 
-    @Query(value = "UPDATE categories_of_cars SET cat_cars_name = :newCatName WHERE cat_cars_name = :pastCatName",nativeQuery = true)
-    int edit(@Param("pastCatName") String pastCatName, @Param("newCatName") String newCatName);
+    @Query("SELECT ct FROM CategoryOfTransport ct WHERE ct.catTrId NOT IN (SELECT p.categoryOfTransport.catTrId FROM PriceList p WHERE p.service.servName = :servName) ORDER BY ct.catTrName ASC")
+    List<CategoryOfTransport> findCategoriesOfTransportWithoutPriceAndTimeByServName(@Param("servName") String servName);
+
 }

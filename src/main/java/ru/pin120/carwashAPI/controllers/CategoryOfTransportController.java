@@ -29,14 +29,10 @@ public class CategoryOfTransportController {
 
 
     @GetMapping
-    public ResponseEntity<List<CategoryOfTransport>> get(@RequestParam(name = "catTrName",required = false) String catTrName){
+    public ResponseEntity<List<CategoryOfTransport>> get(){
         List<CategoryOfTransport> categoriesOfCars = null;
         try{
-            if(catTrName == null) {
-                categoriesOfCars = categoryOfTransportService.getAll();
-            }else{
-                categoriesOfCars = categoryOfTransportService.getByTrNameIgnoreCase(catTrName);
-            }
+            categoriesOfCars = categoryOfTransportService.getAll();
         }catch (Exception e){
             return new ResponseEntity<>(categoriesOfCars, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -44,6 +40,29 @@ public class CategoryOfTransportController {
         return new ResponseEntity<>(categoriesOfCars, HttpStatus.OK);
     }
 
+    @GetMapping("/{catTrName}")
+    public ResponseEntity<List<CategoryOfTransport>> getByCatTrName(@PathVariable("catTrName") String catTrName){
+        List<CategoryOfTransport> categoriesOfCars = null;
+        try{
+            categoriesOfCars = categoryOfTransportService.getByTrNameIgnoreCase(catTrName);
+        }catch (Exception e){
+            return new ResponseEntity<>(categoriesOfCars, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        return new ResponseEntity<>(categoriesOfCars, HttpStatus.OK);
+    }
+
+    @GetMapping("/emptyCategoryTransport/{servName}")
+    public ResponseEntity<List<CategoryOfTransport>> getCategoryTransportWithoutPriceAndTime(@PathVariable(name = "servName") String servName){
+        List<CategoryOfTransport> categoryOfTransports = null;
+        try{
+            categoryOfTransports = categoryOfTransportService.getCategoriesOfTransportWithoutPriceAndTime(servName);
+        }catch (Exception e){
+            return new ResponseEntity<>(categoryOfTransports, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        return new ResponseEntity<>(categoryOfTransports, HttpStatus.OK);
+    }
 
 
 

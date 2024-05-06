@@ -14,6 +14,8 @@ import ru.pin120.carwashAPI.models.Service;
 import ru.pin120.carwashAPI.services.ServService;
 import ru.pin120.carwashAPI.services.ValidateInputService;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -36,8 +38,8 @@ public class ServiceController {
         this.validateInputService = validateInputService;
     }
 
-    @GetMapping
-    public ResponseEntity<List<Service>> getByCategoryName(@RequestParam(name = "categoryName") String categoryName){
+    @GetMapping("/{categoryName}")
+    public ResponseEntity<List<Service>> getByCategoryName(@PathVariable(name = "categoryName") String categoryName){
         List<Service> services = new ArrayList<>();
         try{
             services = servService.getByCategoryName(categoryName);
@@ -47,8 +49,6 @@ public class ServiceController {
 
         return new ResponseEntity<>(services, HttpStatus.OK);
     }
-
-    @GetMapping("/all")
     public ResponseEntity<List<ServiceDTO>> getAll(){
         List<ServiceDTO> serviceDTOS = new ArrayList<>();
         try{
@@ -60,8 +60,8 @@ public class ServiceController {
         return new ResponseEntity<>(serviceDTOS, HttpStatus.OK);
     }
 
-    @GetMapping("/getByServName")
-    public ResponseEntity<ServiceDTO> getByServName(@RequestParam("servName") String servName){
+    @GetMapping("/getByServName/{servName}")
+    public ResponseEntity<ServiceDTO> getByServName(@PathVariable("servName") String servName){
         ServiceDTO serviceDTO = null;
         try{
             serviceDTO = servService.getDTOByServName(servName);

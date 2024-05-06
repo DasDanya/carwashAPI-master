@@ -25,6 +25,10 @@ public class CategoryOfTransportService {
         return (List<CategoryOfTransport>) categoryOfTransportRepository.findAll(sort);
     }
 
+    public List<CategoryOfTransport> getCategoriesOfTransportWithoutPriceAndTime(String servName){
+        return categoryOfTransportRepository.findCategoriesOfTransportWithoutPriceAndTimeByServName(servName);
+    }
+
     public boolean existsByCatTrName(String catTrName){
         return categoryOfTransportRepository.existsByCatTrNameIgnoreCase(catTrName);
     }
@@ -43,7 +47,7 @@ public class CategoryOfTransportService {
     }
 
     public List<CategoryOfTransport> getByTrNameIgnoreCase(String trName) {
-        return categoryOfTransportRepository.findByCatTrNameContainsIgnoreCase(trName);
+        return categoryOfTransportRepository.findByCatTrNameContainsIgnoreCaseOrderByCatTrNameAsc(trName);
     }
 
     public boolean existsCategoryOfTransport(String catTrName, Long catTrId){
