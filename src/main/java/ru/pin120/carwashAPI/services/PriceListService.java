@@ -3,7 +3,6 @@ package ru.pin120.carwashAPI.services;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import ru.pin120.carwashAPI.dtos.PriceListDTO;
 import ru.pin120.carwashAPI.models.PriceList;
 import ru.pin120.carwashAPI.repositories.PriceListRepository;
 
@@ -27,15 +26,6 @@ public class PriceListService {
         return priceListRepository.findByServiceName(servName);
 
     }
-
-//    public List<PriceListDTO> getByServName(String servName){
-//        List<PriceList> priceLists = priceListRepository.findByServiceName(servName);
-//        List<PriceListDTO> priceListDTOS = new ArrayList<>();
-//        for(PriceList priceList: priceLists){
-//            PriceListDTO priceListDTO = new PriceListDTO(priceList.getPlId(), priceList.getService().getServName(), priceList.getCategoryOfTransport().getCatTrName(), priceList.getPlTime(), priceList.getPlPrice());
-//            priceListDTOS.
-//        }
-//    }
 
     public boolean existPriceListPosition(PriceList priceListPosition){
         return priceListRepository.findByCategoryOfTransportCatTrIdAndServiceServName(priceListPosition.getCategoryOfTransport().getCatTrId(), priceListPosition.getService().getServName()).isPresent();
@@ -71,5 +61,101 @@ public class PriceListService {
     @Transactional
     public void delete(PriceList priceList) {
         priceListRepository.delete(priceList);
+    }
+
+    public List<PriceList> filter(String servName,String catTrName, String priceOperator, Integer price, String timeOperator, Integer time) {
+        if(catTrName != null && priceOperator != null && price != null && timeOperator != null && time != null){
+            if(priceOperator.equals("<") && timeOperator.equals(">")){
+                return priceListRepository.query1(servName, catTrName, time, price);
+            }else if(priceOperator.equals("<") && timeOperator.equals("=")){
+                return priceListRepository.query3(servName,catTrName, time, price);
+            }else if(priceOperator.equals("<") && timeOperator.equals("<")){
+                return priceListRepository.query5(servName,catTrName, time, price);
+            }else if(priceOperator.equals("=") && timeOperator.equals(">")){
+                return priceListRepository.query7(servName,catTrName, time, price);
+            }else if(priceOperator.equals("=") && timeOperator.equals("=")){
+                return priceListRepository.query9(servName,catTrName, time, price);
+            }else if(priceOperator.equals("=") && timeOperator.equals("<")){
+                return priceListRepository.query11(servName,catTrName, time, price);
+            }else if(priceOperator.equals(">") && timeOperator.equals("<")){
+                return priceListRepository.query13(servName,catTrName, time, price);
+            }else if(priceOperator.equals(">") && timeOperator.equals("=")){
+                return priceListRepository.query15(servName,catTrName, time, price);
+            }else if(priceOperator.equals(">") && timeOperator.equals(">")){
+                return priceListRepository.query17(servName,catTrName, time, price);
+            }
+        }else if(priceOperator != null && price != null && timeOperator != null && time != null){
+            if(priceOperator.equals("<") && timeOperator.equals(">")){
+                return priceListRepository.query2(servName,time, price);
+            }else if(priceOperator.equals("<") && timeOperator.equals("=")){
+                return priceListRepository.query4(servName,time, price);
+            }else if(priceOperator.equals("<") && timeOperator.equals("<")){
+                return priceListRepository.query6(servName,time, price);
+            }else if(priceOperator.equals("=") && timeOperator.equals(">")){
+                return priceListRepository.query8(servName,time, price);
+            }else if(priceOperator.equals("=") && timeOperator.equals("=")){
+                return priceListRepository.query10(servName,time, price);
+            }else if(priceOperator.equals("=") && timeOperator.equals("<")){
+                return priceListRepository.query12(servName,time, price);
+            }else if(priceOperator.equals(">") && timeOperator.equals("<")){
+                return priceListRepository.query14(servName,time, price);
+            }else if(priceOperator.equals(">") && timeOperator.equals("=")){
+                return priceListRepository.query16(servName,time, price);
+            }else if(priceOperator.equals(">") && timeOperator.equals(">")){
+                return priceListRepository.query18(servName,time, price);
+            }
+        }else if(catTrName != null && priceOperator != null && price != null){
+            switch (priceOperator) {
+                case "<" -> {
+                    return priceListRepository.query19(servName,catTrName, price);
+                }
+                case "=" -> {
+                    return priceListRepository.query21(servName,catTrName, price);
+                }
+                case ">" -> {
+                    return priceListRepository.query23(servName,catTrName, price);
+                }
+            }
+        }else if(catTrName != null && timeOperator != null && time != null){
+            switch (timeOperator) {
+                case "<" -> {
+                    return priceListRepository.query25(servName,catTrName, time);
+                }
+                case "=" -> {
+                    return priceListRepository.query27(servName,catTrName, time);
+                }
+                case ">" -> {
+                    return priceListRepository.query29(servName,catTrName, time);
+                }
+            }
+        }else if(timeOperator != null && time != null){
+            switch (timeOperator) {
+                case "<" -> {
+                    return priceListRepository.query26(servName,time);
+                }
+                case "=" -> {
+                    return priceListRepository.query28(servName,time);
+                }
+                case ">" -> {
+                    return priceListRepository.query30(servName, time);
+                }
+            }
+        }else if(priceOperator != null && price != null){
+            switch (priceOperator) {
+                case "<" -> {
+                    return priceListRepository.query20(servName,price);
+                }
+                case "=" -> {
+                    return priceListRepository.query22(servName,price);
+                }
+                case ">" -> {
+                    return priceListRepository.query24(servName,price);
+                }
+            }
+        }else if(catTrName != null){
+            return priceListRepository.query31(servName,catTrName);
+        }
+
+        return new ArrayList<>();
     }
 }

@@ -10,6 +10,7 @@ import ru.pin120.carwashAPI.models.CategoryOfTransport;
 import ru.pin120.carwashAPI.services.CategoryOfTransportService;
 import ru.pin120.carwashAPI.services.ValidateInputService;
 
+import java.net.URLDecoder;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,6 +45,7 @@ public class CategoryOfTransportController {
     public ResponseEntity<List<CategoryOfTransport>> getByCatTrName(@PathVariable("catTrName") String catTrName){
         List<CategoryOfTransport> categoriesOfCars = null;
         try{
+            //catTrName = URLDecoder.decode(catTrName, "UTF-8");
             categoriesOfCars = categoryOfTransportService.getByTrNameIgnoreCase(catTrName);
         }catch (Exception e){
             return new ResponseEntity<>(categoriesOfCars, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -56,6 +58,7 @@ public class CategoryOfTransportController {
     public ResponseEntity<List<CategoryOfTransport>> getCategoryTransportWithoutPriceAndTime(@PathVariable(name = "servName") String servName){
         List<CategoryOfTransport> categoryOfTransports = null;
         try{
+            //servName = URLDecoder.decode(servName, "UTF-8");
             categoryOfTransports = categoryOfTransportService.getCategoriesOfTransportWithoutPriceAndTime(servName);
         }catch (Exception e){
             return new ResponseEntity<>(categoryOfTransports, HttpStatus.INTERNAL_SERVER_ERROR);

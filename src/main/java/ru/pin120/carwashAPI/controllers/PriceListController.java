@@ -38,6 +38,23 @@ public class PriceListController {
         return new ResponseEntity<>(priceListList, HttpStatus.OK);
     }
 
+    @GetMapping
+    public ResponseEntity<List<PriceList>> search(@RequestParam(value = "servName") String servName, @RequestParam(value = "catTrName", required = false) String catTrName, @RequestParam(value = "priceOperator", required = false) String priceOperator,
+                       @RequestParam(value = "price", required = false) Integer price, @RequestParam(value = "timeOperator", required = false) String timeOperator,
+                       @RequestParam(value = "time", required = false) Integer time){
+
+        //System.out.println(servName + "\n" + catTrName + "\n" + priceOperator + "\n" + price + "\n" + timeOperator + "\n" + time);
+        List<PriceList> priceListPositions = null;
+        try {
+            priceListPositions = priceListService.filter(servName,catTrName,priceOperator,price,timeOperator,time);
+            System.out.println("КОЛИЧЕСТВО " + priceListPositions.size());
+        }catch (Exception e){
+            return new ResponseEntity<>(priceListPositions, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        return new ResponseEntity<>(priceListPositions, HttpStatus.OK);
+    }
+
     @PostMapping("/create")
     public ResponseEntity<?> createPriceListPosition(@RequestBody @Valid PriceList priceListPosition, BindingResult bindingResult){
         try{

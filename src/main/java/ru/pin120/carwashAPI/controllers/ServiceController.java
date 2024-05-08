@@ -42,6 +42,7 @@ public class ServiceController {
     public ResponseEntity<List<Service>> getByCategoryName(@PathVariable(name = "categoryName") String categoryName){
         List<Service> services = new ArrayList<>();
         try{
+            //categoryName = URLDecoder.decode(categoryName, "UTF-8");
             services = servService.getByCategoryName(categoryName);
         }catch (Exception e){
             return new ResponseEntity<>(services, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -64,6 +65,7 @@ public class ServiceController {
     public ResponseEntity<ServiceDTO> getByServName(@PathVariable("servName") String servName){
         ServiceDTO serviceDTO = null;
         try{
+            //servName = URLDecoder.decode(servName, "UTF-8");
             serviceDTO = servService.getDTOByServName(servName);
         }catch (Exception e){
             return new ResponseEntity<>(serviceDTO, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -155,6 +157,7 @@ public class ServiceController {
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> deleteService(@PathVariable("id") String id){
         try{
+            //id = URLDecoder.decode(id, "UTF-8");
             Optional<Service> serviceOptional = servService.getByServName(id);
             if(serviceOptional.isEmpty()){
                 return new ResponseEntity<>(String.format("Услуга %s отсутствует в базе данных", id),HttpStatus.BAD_REQUEST);

@@ -70,6 +70,7 @@ public class CategoryOfServicesController {
     public ResponseEntity<List<String>> getCatNamesByParameter(@PathVariable ("parameter") String parameter){
         List<String> catNames = null;
         try{
+            //parameter = URLDecoder.decode(parameter, "UTF-8");
             catNames = categoryOfServicesService.getCatNamesByParameter(parameter);
         }catch (Exception e){
             return new ResponseEntity<>(catNames, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -158,6 +159,7 @@ public class CategoryOfServicesController {
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> deleteCategoryOfServices(@PathVariable("id") String id){
         try{
+            //id = URLDecoder.decode(id, "UTF-8");
             Optional<CategoryOfServices> categoryOfServicesOptional = categoryOfServicesService.getCategoryByName(id);
             if(categoryOfServicesOptional.isEmpty()){
                 return new ResponseEntity<>(String.format("Категория %s отсутствует в базе данных", id),HttpStatus.BAD_REQUEST);
