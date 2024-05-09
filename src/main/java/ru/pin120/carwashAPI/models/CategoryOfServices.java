@@ -4,6 +4,7 @@ package ru.pin120.carwashAPI.models;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,7 +24,7 @@ public class CategoryOfServices {
     @Size(max = 30, message = "Максимальная длина 30 символов")
     @NotBlank(message = "Необходимо ввести название категории услуг")
     //@Pattern(regexp = "^[А-Яа-яЁё\\s\\-]+$", message = "Название должно состоять из русских букв, пробелов и знака тире")
-    //@Pattern(regexp = "^[А-Яа-яЁё -]+$", message = "Название должно состоять из русских букв, пробелов и знака тире") просто с пробелом
+    @Pattern(regexp = "^[a-zA-Zа-яА-ЯёЁ0-9 -]+$", message = "Название должно состоять из русских букв, цифр, пробелов и знака тире")
     private String catName;
 
     @OneToMany(mappedBy = "category")

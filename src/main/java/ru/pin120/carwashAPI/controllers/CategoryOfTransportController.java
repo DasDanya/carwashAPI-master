@@ -10,7 +10,7 @@ import ru.pin120.carwashAPI.models.CategoryOfTransport;
 import ru.pin120.carwashAPI.services.CategoryOfTransportService;
 import ru.pin120.carwashAPI.services.ValidateInputService;
 
-import java.net.URLDecoder;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,6 +41,23 @@ public class CategoryOfTransportController {
         return new ResponseEntity<>(categoriesOfCars, HttpStatus.OK);
     }
 
+    @GetMapping("/availableCategories")
+    public ResponseEntity<List<CategoryOfTransport>> getAvailableCategories(@RequestParam(value = "mark") String mark, @RequestParam(value = "model")String model, @RequestParam(value = "trId", required = false) Long trId){
+        List<CategoryOfTransport> categoryOfTransports = new ArrayList<>();
+        try{
+            if(trId == null) {
+                categoryOfTransports = categoryOfTransportService.getAvailableCategoriesByMarkAndModel(mark, model);
+            }else{
+                System.out.println("TRRRRRIDDDDDDDDDDD");
+                categoryOfTransports = categoryOfTransportService.getAvailableCategoriesByMarkAndModel(mark, model,trId);
+            }
+        }catch (Exception e){
+            return new ResponseEntity<>(categoryOfTransports, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        return new ResponseEntity<>(categoryOfTransports, HttpStatus.OK);
+    }
+
     @GetMapping("/{catTrName}")
     public ResponseEntity<List<CategoryOfTransport>> getByCatTrName(@PathVariable("catTrName") String catTrName){
         List<CategoryOfTransport> categoriesOfCars = null;
@@ -66,7 +83,6 @@ public class CategoryOfTransportController {
 
         return new ResponseEntity<>(categoryOfTransports, HttpStatus.OK);
     }
-
 
 
     @PostMapping("/create")
@@ -96,7 +112,7 @@ public class CategoryOfTransportController {
             }
 
             CategoryOfTransport existedCategoryOfTransport = categoryOfCars.get();
-            if(!existedCategoryOfTransport.getCars().isEmpty()){
+            if(!existedCategoryOfTransport.getTransports().isEmpty()){
                 return new ResponseEntity<>(String.format("Нельзя удалить категорию %s, так как к данной категории привязан транспорт", existedCategoryOfTransport.getCatTrName()), HttpStatus.BAD_REQUEST);
             }
 
