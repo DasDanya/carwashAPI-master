@@ -29,16 +29,22 @@ public class TransportController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Transport>> getByPage(@RequestParam(value = "pageIndex") Integer pageIndex){
+    public ResponseEntity<List<Transport>> getByPage(@RequestParam(value = "pageIndex") Integer pageIndex, @RequestParam(value = "category", required = false) String category,
+                                                     @RequestParam(value = "mark", required = false) String mark, @RequestParam(value = "model",required = false) String model){
         List<Transport> transports = new ArrayList<>();
         try{
-            transports = transportService.getByPage(pageIndex);
+            if(category == null && mark == null && model == null) {
+                transports = transportService.getByPage(pageIndex);
+            }else{
+                transports = transportService.search(pageIndex, category, mark, model);
+            }
         }catch (Exception e){
             return new ResponseEntity<>(transports, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         return new ResponseEntity<>(transports, HttpStatus.OK);
     }
+
 
     @PostMapping("/create")
     public ResponseEntity<?> create(@RequestBody @Valid Transport transport, BindingResult bindingResult){

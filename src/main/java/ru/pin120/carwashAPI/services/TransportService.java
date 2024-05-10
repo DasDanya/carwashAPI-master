@@ -15,7 +15,7 @@ import java.util.Optional;
 @Service
 public class TransportService {
 
-    private static final int COUNT_TRANSPORT_IN_PAGE = 6;
+    private static final int COUNT_TRANSPORT_IN_PAGE = 3;
     private final TransportRepository transportRepository;
 
     public TransportService(TransportRepository transportRepository) {
@@ -50,5 +50,26 @@ public class TransportService {
     @Transactional
     public void deleteById(Long trId) {
         transportRepository.deleteByTrId(trId);
+    }
+
+    public List<Transport> search(Integer pageIndex, String category, String mark, String model) {
+        Pageable pageable = PageRequest.of(pageIndex, COUNT_TRANSPORT_IN_PAGE, Sort.by("categoryOfTransport.catTrName", "trMark", "trModel"));
+        if(mark != null && model != null && category != null){
+            return transportRepository.findByMarkAndModelAndCategory(mark,model,category,pageable);
+        }else if(mark != null && model != null){
+            return transportRepository.findByMarkAndModel(mark,model,pageable);
+        }else if(mark != null && category != null){
+            return transportRepository.findByMarkAndCategory(mark,category,pageable);
+        }else if(model != null && category != null){
+            return transportRepository.findByModelAndCategory(model,category,pageable);
+        }else if(mark != null){
+            return transportRepository.findByMark(mark,pageable);
+        }else if(model != null){
+            return transportRepository.findByModel(model,pageable);
+        }else if(category != null){
+            return transportRepository.findByCategory(category,pageable);
+        }
+
+        return null;
     }
 }
