@@ -16,14 +16,14 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "clients_transport")
+@Table(name = "clients_transport",uniqueConstraints = @UniqueConstraint(columnNames = {"cl_tr_state_number","tr_id","cl_id"}))
 public class ClientsTransport {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long clTrId;
 
-    @Column(nullable = false, length = 9)
+    @Column(nullable = false, name = "cl_tr_state_number", length = 9)
     @Size(max = 9, message = "Максимальная длина = 9 символов")
     @NotBlank(message = "Необходимо ввести гос номер транспорта")
     private String clTrStateNumber;

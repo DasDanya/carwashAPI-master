@@ -32,13 +32,13 @@ public class Transport {
     @Column(name = "tr_mark",nullable = false,length = 50)
     @NotBlank(message = "Необходимо ввести марку автомобиля")
     @Size(max = 50, message = "Максимальная длина 50 символов")
-    @Pattern(regexp = "^[A-Za-zА-Яа-яЁё\\s'-]+$",message = "Разрешается вводить русские, английские буквы, тире, одинарные кавычки и пробелы")
+    @Pattern(regexp = "^[A-Za-zА-Яа-яЁё\\s-]+$",message = "Разрешается вводить русские, английские буквы, тире, одинарные кавычки и пробелы")
     private String trMark;
 
     @Column(name = "tr_model",nullable = false,length = 50)
     @NotBlank(message = "Необходимо ввести модель автомобиля")
     @Size(max = 50, message = "Максимальная длина 50 символов")
-    @Pattern(regexp = "^[A-Za-zА-Яа-яЁё0-9\\s'-]+$", message = "Разрешается вводить русские, английские буквы, цифры, тире, одинарные кавычки и пробелы")
+    @Pattern(regexp = "^[A-Za-zА-Яа-яЁё0-9\\s-]+$", message = "Разрешается вводить русские, английские буквы, цифры, тире, одинарные кавычки и пробелы")
     private String trModel;
 
 

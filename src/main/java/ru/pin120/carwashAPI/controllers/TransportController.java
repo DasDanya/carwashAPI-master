@@ -31,7 +31,7 @@ public class TransportController {
     @GetMapping
     public ResponseEntity<List<Transport>> getByPage(@RequestParam(value = "pageIndex") Integer pageIndex, @RequestParam(value = "category", required = false) String category,
                                                      @RequestParam(value = "mark", required = false) String mark, @RequestParam(value = "model",required = false) String model){
-        List<Transport> transports = new ArrayList<>();
+        List<Transport> transports = null;
         try{
             if(category == null && mark == null && model == null) {
                 transports = transportService.getByPage(pageIndex);
