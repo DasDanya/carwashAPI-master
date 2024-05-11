@@ -30,10 +30,15 @@ public class ClientController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Client>> getByPage(@RequestParam("pageIndex") Integer pageIndex){
+    public ResponseEntity<List<Client>> getByPage(@RequestParam(value = "pageIndex") Integer pageIndex, @RequestParam(value = "surname",required = false) String surname, @RequestParam(value = "name", required = false) String name,
+                                                  @RequestParam(value = "phone",required = false) String phone, @RequestParam(value = "discount", required = false) Integer discount, @RequestParam(value = "filterDiscountOperator",required = false) String filterDiscountOperator){
         List<Client> clients = null;
         try{
-            clients = clientService.getByPage(pageIndex);
+            if(surname == null && name == null && phone == null && filterDiscountOperator == null && discount == null) {
+                clients = clientService.getByPage(pageIndex);
+            }else{
+                clients = clientService.search(pageIndex,surname,name,phone,discount, filterDiscountOperator);
+            }
         }catch (Exception e){
             return new ResponseEntity<>(clients, HttpStatus.INTERNAL_SERVER_ERROR);
         }

@@ -2,10 +2,7 @@ package ru.pin120.carwashAPI.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -43,6 +40,8 @@ public class Client {
     @Pattern(regexp = "^\\+7\\d{10}$", message = "Неверный формат номера телефона. Пример +77777777777")
     private String clPhone;
 
+    @Column(nullable = false)
+    @NotNull(message = "Необходимо указать скидку")
     @Max(value = 100, message = "Значение должно быть меньше или равно 100")
     private Integer clDiscount;
 
