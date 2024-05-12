@@ -2,6 +2,7 @@ package ru.pin120.carwashAPI.models;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -31,11 +32,13 @@ public class ClientsTransport {
     @ManyToOne
     @NotNull(message = "Необходимо указать данные о транспорте")
     @JoinColumn(name = "tr_id", nullable = false)
+    @Valid
     private Transport transport;
 
     @ManyToOne
     @NotNull(message = "Необходимо указать владельца")
     @JoinColumn(name = "cl_id",nullable = false)
+    @Valid
     private Client client;
 
 }

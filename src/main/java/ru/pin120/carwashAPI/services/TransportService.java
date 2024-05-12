@@ -24,7 +24,7 @@ public class TransportService {
 
 
     public List<Transport> getByPage(Integer pageIndex){
-        Pageable pageable = PageRequest.of(pageIndex, COUNT_TRANSPORT_IN_PAGE, Sort.by("categoryOfTransport.catTrName", "trMark", "trModel"));
+        Pageable pageable = PageRequest.of(pageIndex, COUNT_TRANSPORT_IN_PAGE, Sort.by( "trMark", "trModel", "categoryOfTransport.catTrName"));
 
         return transportRepository.findAll(pageable).getContent();
     }
@@ -53,7 +53,7 @@ public class TransportService {
     }
 
     public List<Transport> search(Integer pageIndex, String category, String mark, String model) {
-        Pageable pageable = PageRequest.of(pageIndex, COUNT_TRANSPORT_IN_PAGE, Sort.by("categoryOfTransport.catTrName", "trMark", "trModel"));
+        Pageable pageable = PageRequest.of(pageIndex, COUNT_TRANSPORT_IN_PAGE, Sort.by( "trMark", "trModel", "categoryOfTransport.catTrName"));
         if(mark != null && model != null && category != null){
             return transportRepository.findByMarkAndModelAndCategory(mark,model,category,pageable);
         }else if(mark != null && model != null){
