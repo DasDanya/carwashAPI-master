@@ -10,6 +10,7 @@ import ru.pin120.carwashAPI.models.Transport;
 import ru.pin120.carwashAPI.services.ClientsTransportService;
 import ru.pin120.carwashAPI.services.ValidateInputService;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,10 +28,16 @@ public class ClientsTransportController {
         this.validateInputService = validateInputService;
     }
 
-    @GetMapping("/getByClient/{id}")
-    public ResponseEntity<List<ClientsTransport>> getByClientId(@PathVariable("id") Long clientId){
+    @GetMapping("/getByClient")
+    public ResponseEntity<List<ClientsTransport>> getByClientId(@RequestParam("clId") Long clientId, @RequestParam(value = "mark", required = false) String mark, @RequestParam(value = "model", required = false) String model,
+                                                                @RequestParam(value = "category", required = false) String category, @RequestParam(value = "stateNumber", required = false) String stateNumber){
         try{
-            List<ClientsTransport> clientsTransports = clientsTransportService.getByClientId(clientId);
+            List<ClientsTransport> clientsTransports;
+            if(mark == null && model == null && category == null && stateNumber == null) {
+                clientsTransports = clientsTransportService.getByClientId(clientId);
+            }else{
+                clientsTransports = clientsTransportService.search(clientId,mark,model,category,stateNumber);
+            }
             return new ResponseEntity<>(clientsTransports, HttpStatus.OK);
         }catch (Exception e){
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
