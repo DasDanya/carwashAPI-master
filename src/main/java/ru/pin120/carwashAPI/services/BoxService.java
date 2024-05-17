@@ -6,6 +6,7 @@ import ru.pin120.carwashAPI.models.Box;
 import ru.pin120.carwashAPI.repositories.BoxRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class BoxService {
@@ -22,5 +23,13 @@ public class BoxService {
 
     public void save(Box box){
         boxRepository.save(box);
+    }
+
+    public Optional<Box> getById(Long boxId){
+        return boxRepository.findById(boxId);
+    }
+
+    public void delete(Long boxId) {
+        boxRepository.deleteById(boxId);
     }
 }
