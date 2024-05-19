@@ -45,6 +45,7 @@ public class Client {
     @Max(value = 100, message = "Значение должно быть меньше или равно 100")
     private Integer clDiscount;
 
+
     @OneToMany(mappedBy = "client")
     @JsonIgnore
     private List<ClientsTransport> transports;

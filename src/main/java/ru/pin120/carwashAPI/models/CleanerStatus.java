@@ -5,13 +5,15 @@ import lombok.Getter;
 @Getter
 public enum CleanerStatus {
 
-    WORKING("Работает"),
-    DISMISSED("Уволен");
-
-    private final String displayValue;
-
-    CleanerStatus(String displayValue) {
-        this.displayValue = displayValue;
-    }
+    DISMISSED,
+    WORKING
+//    WORKING("Работает"),
+//    DISMISSED("Уволен");
+//
+//    private final String displayValue;
+//
+//    CleanerStatus(String displayValue) {
+//        this.displayValue = displayValue;
+//    }
 
 }

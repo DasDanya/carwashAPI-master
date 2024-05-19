@@ -53,11 +53,15 @@ public class Cleaner {
     @NotNull(message = "Необходимо указать статус")
     private CleanerStatus clrStatus;
 
+    @Column(length = 150)
+    private String clrPhotoName;
+
     @ManyToOne
-    @JoinColumn(name = "box_id")
+    @JoinColumn(name = "box_id",nullable = false)
     private Box box;
 
     @OneToMany(mappedBy = "cleaner", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<WorkSchedule> workSchedules;
 
     @OneToMany(mappedBy = "cleaner", cascade = CascadeType.ALL)
