@@ -57,15 +57,10 @@ public class Cleaner {
     private String clrPhotoName;
 
     @ManyToOne
-    @JoinColumn(name = "box_id",nullable = false)
+    @JoinColumn(name = "box_id")
     private Box box;
 
     @OneToMany(mappedBy = "cleaner", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<WorkSchedule> workSchedules;
-
-    @OneToMany(mappedBy = "cleaner", cascade = CascadeType.ALL)
-    @JsonIgnore
-    private List<WorkingHours> workingHours;
-
 }

@@ -7,6 +7,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 
 @Configuration
 public class MainConfig {
+
     @Bean("messageSource")
     public MessageSource messageSource() {
         ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();

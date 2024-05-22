@@ -7,15 +7,17 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import ru.pin120.carwashAPI.Exceptions.FileIsNotImageException;
+import ru.pin120.carwashAPI.dtos.CleanerDTO;
 import ru.pin120.carwashAPI.models.Cleaner;
 import ru.pin120.carwashAPI.models.CleanerStatus;
+import ru.pin120.carwashAPI.models.WorkSchedule;
 import ru.pin120.carwashAPI.repositories.CleanerRepository;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.time.LocalDate;
+import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @Service
 public class CleanerService {
@@ -95,6 +97,53 @@ public class CleanerService {
         return query.getResultList();
     }
 
+
+    public List<CleanerDTO> getCleanersWithWorkSchedule(LocalDate startInterval, LocalDate endInterval, boolean currentMonth){
+        List<Cleaner> cleaners = (List<Cleaner>) cleanerRepository.findAll();
+        Predicate<Cleaner> predicate = getCleanerPredicate(startInterval, endInterval, currentMonth);
+
+        return cleaners.stream()
+                .filter(predicate)
+                .sorted(Comparator.comparing(Cleaner::getClrStatus)
+                        .thenComparing((Cleaner c) -> c.getBox() != null ? c.getBox().getBoxId() : Long.MAX_VALUE)
+                        .thenComparing(Cleaner::getClrSurname)
+                        .thenComparing(Cleaner::getClrName)
+                        .thenComparing(Cleaner::getClrPatronymic))
+                .map(cleaner -> {
+                    List<WorkSchedule> filteredSchedules = cleaner.getWorkSchedules().stream()
+                            .filter(ws -> !ws.getWsWorkDay().isBefore(startInterval) && !ws.getWsWorkDay().isAfter(endInterval))
+                            .sorted(Comparator.comparing(WorkSchedule::getWsWorkDay))
+                            .collect(Collectors.toList());
+
+                    return new CleanerDTO(
+                            cleaner.getClrId(),
+                            cleaner.getClrSurname(),
+                            cleaner.getClrName(),
+                            cleaner.getClrPatronymic(),
+                            cleaner.getClrStatus(),
+                            cleaner.getBox(),
+                            filteredSchedules
+                    );
+                })
+                //.filter(dto -> !dto.getWorkSchedules().isEmpty())
+                .collect(Collectors.toList());
+    }
+
+    private static Predicate<Cleaner> getCleanerPredicate(LocalDate startInterval, LocalDate endInterval, boolean currentMonth) {
+        Predicate<Cleaner> predicate;
+        if(currentMonth){
+            predicate = cleaner -> cleaner.getClrStatus() == CleanerStatus.ACT ||
+                    (cleaner.getClrStatus() == CleanerStatus.DISMISSED &&
+                            cleaner.getWorkSchedules().stream()
+                                    .anyMatch(ws -> !ws.getWsWorkDay().isBefore(startInterval) && !ws.getWsWorkDay().isAfter(endInterval)));
+        }else{
+            predicate = cleaner ->cleaner.getWorkSchedules().stream()
+                    .anyMatch(ws -> !ws.getWsWorkDay().isBefore(startInterval) && !ws.getWsWorkDay().isAfter(endInterval));
+        }
+        return predicate;
+    }
+
+
     public byte[] getPhoto(String photoName) throws IOException {
         return filesService.getFile(PATH_TO_PHOTOS + photoName);
     }
@@ -131,6 +180,7 @@ public class CleanerService {
         }
     }
 
+    @Transactional
     public void edit(Cleaner existedCleaner, Cleaner cleaner, MultipartFile photo) throws Exception {
         existedCleaner.setClrSurname(cleaner.getClrSurname());
         existedCleaner.setClrName(cleaner.getClrName());
@@ -138,6 +188,7 @@ public class CleanerService {
         existedCleaner.setClrPhone(cleaner.getClrPhone());
         existedCleaner.setClrStatus(cleaner.getClrStatus());
         existedCleaner.setBox(cleaner.getBox());
+
 
         if(photo != null){
             if(filesService.isImage(photo)){

@@ -8,11 +8,15 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ru.pin120.carwashAPI.Exceptions.FileIsNotImageException;
+import ru.pin120.carwashAPI.dtos.CleanerDTO;
 import ru.pin120.carwashAPI.models.Cleaner;
 import ru.pin120.carwashAPI.models.CleanerStatus;
+import ru.pin120.carwashAPI.models.WorkSchedule;
 import ru.pin120.carwashAPI.services.CleanerService;
 import ru.pin120.carwashAPI.services.ValidateInputService;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
@@ -37,7 +41,8 @@ public class CleanerController {
             @RequestParam(value = "patronymic",required = false) String patronymic,
             @RequestParam(value = "phone",required = false) String phone,
             @RequestParam(value = "status",required = false) CleanerStatus status,
-            @RequestParam(value = "boxNumber",required = false) Long boxNumber){
+            @RequestParam(value = "boxNumber",required = false) Long boxNumber)
+    {
 
         try{
             List<Cleaner> cleaners = cleanerService.get(surname, name,patronymic,phone,status,boxNumber);
@@ -45,6 +50,23 @@ public class CleanerController {
         }catch (Exception e){
             e.printStackTrace();
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/workSchedule")
+    public ResponseEntity<?> getWithWorkSchedule(@RequestParam(value = "startInterval") LocalDate startInterval,
+                                                                @RequestParam(value = "endInterval") LocalDate endInterval,
+                                                                @RequestParam(value = "currentMonth") boolean currentMonth)
+    {
+        try{
+            if(!endInterval.isAfter(startInterval)){
+                return new ResponseEntity<>("Дата окончания интервала должна быть больше даты начала", HttpStatus.BAD_REQUEST);
+            }
+            List<CleanerDTO> cleanerDTOS = cleanerService.getCleanersWithWorkSchedule(startInterval, endInterval, currentMonth);
+
+            return new ResponseEntity<>(cleanerDTOS, HttpStatus.OK);
+        }catch (Exception e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

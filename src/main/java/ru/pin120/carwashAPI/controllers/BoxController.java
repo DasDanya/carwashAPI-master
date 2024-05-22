@@ -36,6 +36,16 @@ public class BoxController {
         }
     }
 
+    @GetMapping("/available")
+    public ResponseEntity<List<Box>> getAvailable(){
+        try{
+            List<Box> availableBoxes = boxService.getAvailable();
+            return new ResponseEntity<>(availableBoxes, HttpStatus.OK);
+        }catch (Exception e){
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 
     @PostMapping("/create")
     public ResponseEntity<?> create(@RequestBody @Valid Box box, BindingResult bindingResult){

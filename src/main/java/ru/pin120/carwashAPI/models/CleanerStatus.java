@@ -5,8 +5,8 @@ import lombok.Getter;
 @Getter
 public enum CleanerStatus {
 
-    DISMISSED,
-    WORKING
+    ACT,
+    DISMISSED
 //    WORKING("Работает"),
 //    DISMISSED("Уволен");
 //
