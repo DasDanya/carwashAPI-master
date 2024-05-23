@@ -120,6 +120,7 @@ public class CleanerController {
             return new ResponseEntity<>(existedCleaner, HttpStatus.OK);
 
         }catch (Exception e){
+            e.printStackTrace();
             if(e instanceof FileIsNotImageException){
                 return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
             }else {

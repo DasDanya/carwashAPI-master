@@ -26,12 +26,14 @@ public class CleanerService {
     private static final String NAME_DEFAULT_PHOTO = "avatardefault.jpg";
     private final CleanerRepository cleanerRepository;
     private final FilesService filesService;
+    private final WorkScheduleService workScheduleService;
     @PersistenceContext
     private EntityManager entityManager;
 
-    public CleanerService(CleanerRepository cleanerRepository, FilesService filesService) {
+    public CleanerService(CleanerRepository cleanerRepository, FilesService filesService, WorkScheduleService workScheduleService) {
         this.cleanerRepository = cleanerRepository;
         this.filesService = filesService;
+        this.workScheduleService = workScheduleService;
     }
 
     public List<Cleaner> get(String surname, String name, String patronymic, String phone, CleanerStatus status, Long boxNumber){
@@ -186,8 +188,11 @@ public class CleanerService {
         existedCleaner.setClrName(cleaner.getClrName());
         existedCleaner.setClrPatronymic(cleaner.getClrPatronymic());
         existedCleaner.setClrPhone(cleaner.getClrPhone());
-        existedCleaner.setClrStatus(cleaner.getClrStatus());
         existedCleaner.setBox(cleaner.getBox());
+        existedCleaner.setClrStatus(cleaner.getClrStatus());
+        if(existedCleaner.getClrStatus() == CleanerStatus.DISMISSED){
+            workScheduleService.deleteByClrIdAndStartDate(existedCleaner.getClrId(), LocalDate.now());
+        }
 
 
         if(photo != null){
