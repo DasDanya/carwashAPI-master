@@ -24,7 +24,7 @@ public class CategoryOfServices {
     @Size(max = 30, message = "Максимальная длина 30 символов")
     @NotBlank(message = "Необходимо ввести название категории услуг")
     //@Pattern(regexp = "^[А-Яа-яЁё\\s\\-]+$", message = "Название должно состоять из русских букв, пробелов и знака тире")
-    @Pattern(regexp = "^[a-zA-Zа-яА-ЯёЁ0-9 -]+$", message = "Название должно состоять из русских букв, цифр, пробелов и знака тире")
+    @Pattern(regexp = "^[a-zA-Zа-яА-ЯёЁ0-9 -]+$", message = "Допустимые символы для названия: латинские буквы, кириллица, цифры, пробелы и знаки тире")
     private String catName;
 
     @OneToMany(mappedBy = "category")

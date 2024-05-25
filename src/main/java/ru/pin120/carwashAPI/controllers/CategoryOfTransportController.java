@@ -16,7 +16,7 @@ import java.util.Optional;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
-@RequestMapping("/api/categoryOfTransport")
+@RequestMapping("/api/categoriesOfTransport")
 public class CategoryOfTransportController {
 
     private final CategoryOfTransportService categoryOfTransportService;
@@ -93,7 +93,7 @@ public class CategoryOfTransportController {
             }
 
             if(categoryOfTransportService.existsByCatTrName(categoryOfTransport.getCatTrName())){
-                return new ResponseEntity<>(String.format("Категория %s уже существует", categoryOfTransport.getCatTrName()), HttpStatus.CONFLICT);
+                return new ResponseEntity<>(String.format("Категория %s уже существует (без учёта регистра)", categoryOfTransport.getCatTrName()), HttpStatus.CONFLICT);
             }
             categoryOfTransportService.save(categoryOfTransport);
         }catch (Exception e){

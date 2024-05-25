@@ -83,7 +83,7 @@ public class ServiceController {
             }
 
             if(servService.existsService(serviceDTO.getServName())){
-                return new ResponseEntity<>(String.format("Услуга %s уже существует", serviceDTO.getServName()), HttpStatus.CONFLICT);
+                return new ResponseEntity<>(String.format("Услуга %s уже существует (без учёта регистра)", serviceDTO.getServName()), HttpStatus.CONFLICT);
             }
             servService.create(serviceDTO);
             service = servService.getByServName(serviceDTO.getServName()).get();

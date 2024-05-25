@@ -26,7 +26,7 @@ public class Service {
     @Id
     @Column(unique = true,nullable = false, length = 30)
     @Size(max = 30, message = "Максимальная длина 30 символов")
-    @Pattern(regexp = "^[a-zA-Zа-яА-ЯёЁ0-9 -]+$", message = "Название должно состоять из русских букв, цифр, пробелов и знака тире")
+    @Pattern(regexp = "^[a-zA-Zа-яА-ЯёЁ0-9 -]+$", message = "Допустимые символы для названия: латинские буквы, кириллица, цифры, пробелы и знаки тире")
     @NotBlank(message = "Необходимо ввести название услуги")
     private String servName;
 
@@ -39,6 +39,13 @@ public class Service {
     @OneToMany(mappedBy = "service", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<PriceList> priceList;
+
+    @ManyToMany
+    @JoinTable(name = "cat_of_supplies_for_service",
+            joinColumns = @JoinColumn(name = "serv_name",nullable = false),
+            inverseJoinColumns = @JoinColumn(name = "c_sup_name",nullable = false),
+            uniqueConstraints = @UniqueConstraint(columnNames = {"serv_name", "c_sup_name"}))
+    private List<CategoryOfSupplies> categoriesOfSupplies;
 
     public Service(String servName, CategoryOfServices category) {
         this.servName = servName;

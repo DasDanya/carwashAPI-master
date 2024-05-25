@@ -99,7 +99,7 @@ public class CategoryOfServicesController {
             }
 
             if(categoryOfServicesService.existsCategoryOfServices(categoryOfServices.getCatName())){
-                return new ResponseEntity<>(String.format("Категория %s уже существует", categoryOfServices.getCatName()), HttpStatus.CONFLICT);
+                return new ResponseEntity<>(String.format("Категория %s уже существует (без учёта регистра)", categoryOfServices.getCatName()), HttpStatus.CONFLICT);
             }
             categoryOfServicesService.create(categoryOfServices);
 
