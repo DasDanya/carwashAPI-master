@@ -56,6 +56,10 @@ public class ServService {
         }
     }
 
+    public void edit(ru.pin120.carwashAPI.models.Service service){
+        serviceRepository.save(service);
+    }
+
     public List<ru.pin120.carwashAPI.models.Service> getByCategoryName(String categoryName){
         return serviceRepository.findByCategory_CatNameOrderByServNameAsc(categoryName);
     }

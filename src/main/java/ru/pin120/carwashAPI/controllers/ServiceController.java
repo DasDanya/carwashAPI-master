@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.pin120.carwashAPI.dtos.BindWithCategoryDTO;
 import ru.pin120.carwashAPI.dtos.ServiceDTO;
 import ru.pin120.carwashAPI.models.CategoryOfServices;
+import ru.pin120.carwashAPI.models.ClientsTransport;
 import ru.pin120.carwashAPI.models.Service;
 import ru.pin120.carwashAPI.services.ServService;
 import ru.pin120.carwashAPI.services.ValidateInputService;
@@ -74,6 +75,7 @@ public class ServiceController {
         return new ResponseEntity<>(serviceDTO, HttpStatus.OK);
     }
 
+
     @PostMapping("/create")
     public ResponseEntity<?> createService(@RequestBody @Valid ServiceDTO serviceDTO, BindingResult bindingResult){
         Service service = null;
@@ -93,6 +95,38 @@ public class ServiceController {
         }
 
         return new ResponseEntity<>(service, HttpStatus.OK);
+    }
+
+    @GetMapping("/get/{servName}")
+    public ResponseEntity<Service> getService(@PathVariable("servName") String servName){
+        try{
+            Optional<Service> serviceOptional = servService.getByServName(servName);
+            return serviceOptional.map(service -> new ResponseEntity<>(service, HttpStatus.OK)).orElseGet(() -> new ResponseEntity<>(null, HttpStatus.NOT_FOUND));
+
+        }catch (Exception e){
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping("/necessaryCategoriesOfSupplies/{servName}")
+    public ResponseEntity<?> editCategoriesOfSupplies(@PathVariable("servName") String servName,@RequestBody Service service){
+        try{
+            Optional<Service> serviceOptional = servService.getByServName(servName);
+            if(serviceOptional.isEmpty()){
+                return new ResponseEntity<>(String.format("Услуга %s отсутствует в базе данных",servName), HttpStatus.BAD_REQUEST);
+            }
+            Service existedService = serviceOptional.get();
+            if(!existedService.getServName().equals(servName)){
+                return new ResponseEntity<>("Параметр \"Название услуги\" не совпадает с названием услуги", HttpStatus.BAD_REQUEST);
+            }
+
+            existedService.setCategoriesOfSupplies(service.getCategoriesOfSupplies());
+            servService.edit(existedService);
+
+            return new ResponseEntity<>(existedService, HttpStatus.OK);
+        }catch (Exception e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PutMapping("/bindServicesToCategory")
@@ -126,6 +160,8 @@ public class ServiceController {
 
         return new ResponseEntity<>(service, HttpStatus.OK);
     }
+
+
 
 //    @DeleteMapping("/delete/{id}")
 //    public ResponseEntity<String> deleteService(@RequestBody @Valid ServiceDTO serviceDTO, BindingResult bindingResult){
