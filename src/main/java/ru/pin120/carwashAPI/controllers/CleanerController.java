@@ -1,6 +1,7 @@
 package ru.pin120.carwashAPI.controllers;
 
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -45,7 +46,7 @@ public class CleanerController {
     {
 
         try{
-            List<Cleaner> cleaners = cleanerService.get(surname, name,patronymic,phone,status,boxNumber);
+            List<Cleaner> cleaners = cleanerService.get(surname, name,patronymic,phone,status);
             return new ResponseEntity<>(cleaners, HttpStatus.OK);
         }catch (Exception e){
             e.printStackTrace();
@@ -56,16 +57,20 @@ public class CleanerController {
     @GetMapping("/workSchedule")
     public ResponseEntity<?> getWithWorkSchedule(@RequestParam(value = "startInterval") LocalDate startInterval,
                                                                 @RequestParam(value = "endInterval") LocalDate endInterval,
+                                                                @RequestParam(value = "boxId") Long boxId,
                                                                 @RequestParam(value = "currentMonth") boolean currentMonth)
     {
         try{
             if(!endInterval.isAfter(startInterval)){
                 return new ResponseEntity<>("Дата окончания интервала должна быть больше даты начала", HttpStatus.BAD_REQUEST);
             }
-            List<CleanerDTO> cleanerDTOS = cleanerService.getCleanersWithWorkSchedule(startInterval, endInterval, currentMonth);
+            List<CleanerDTO> cleanerDTOS = cleanerService.getCleanersWithWorkSchedule(startInterval, endInterval, boxId, currentMonth);
 
             return new ResponseEntity<>(cleanerDTOS, HttpStatus.OK);
         }catch (Exception e){
+            if(e instanceof EntityNotFoundException){
+                return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+            }
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

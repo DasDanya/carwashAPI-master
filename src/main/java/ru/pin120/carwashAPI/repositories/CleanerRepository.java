@@ -9,5 +9,4 @@ import ru.pin120.carwashAPI.models.Cleaner;
 @Repository
 public interface CleanerRepository extends CrudRepository<Cleaner, Long> {
 
-
 }

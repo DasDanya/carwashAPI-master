@@ -1,6 +1,7 @@
 package ru.pin120.carwashAPI.services;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
@@ -8,6 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import ru.pin120.carwashAPI.Exceptions.FileIsNotImageException;
 import ru.pin120.carwashAPI.dtos.CleanerDTO;
+import ru.pin120.carwashAPI.dtos.WorkScheduleDTO;
+import ru.pin120.carwashAPI.models.Box;
 import ru.pin120.carwashAPI.models.Cleaner;
 import ru.pin120.carwashAPI.models.CleanerStatus;
 import ru.pin120.carwashAPI.models.WorkSchedule;
@@ -27,16 +30,18 @@ public class CleanerService {
     private final CleanerRepository cleanerRepository;
     private final FilesService filesService;
     private final WorkScheduleService workScheduleService;
+    private final BoxService boxService;
     @PersistenceContext
     private EntityManager entityManager;
 
-    public CleanerService(CleanerRepository cleanerRepository, FilesService filesService, WorkScheduleService workScheduleService) {
+    public CleanerService(CleanerRepository cleanerRepository, FilesService filesService, WorkScheduleService workScheduleService, BoxService boxService) {
         this.cleanerRepository = cleanerRepository;
         this.filesService = filesService;
         this.workScheduleService = workScheduleService;
+        this.boxService = boxService;
     }
 
-    public List<Cleaner> get(String surname, String name, String patronymic, String phone, CleanerStatus status, Long boxNumber){
+    public List<Cleaner> get(String surname, String name, String patronymic, String phone, CleanerStatus status){
         String baseQuery = "SELECT cl FROM Cleaner cl";
         String partQuery = "";
         Map<String, Object> parameters = new HashMap<>();
@@ -76,19 +81,11 @@ public class CleanerService {
             }
             parameters.put("status", status);
         }
-        if(boxNumber != null){
-            if(partQuery.isBlank()){
-                partQuery = " cl.box.boxId = :boxId";
-            }else{
-                partQuery += " AND cl.box.boxId = :boxId";
-            }
-            parameters.put("boxId", boxNumber);
-        }
         if(!partQuery.isBlank()) {
-            partQuery += " ORDER BY cl.clrStatus, cl.clrSurname, cl.clrName, cl.clrPatronymic, cl.clrPhone, cl.box.boxId ASC";
+            partQuery += " ORDER BY cl.clrStatus, cl.clrSurname, cl.clrName, cl.clrPatronymic, cl.clrPhone ASC";
             baseQuery = baseQuery + " WHERE " + partQuery;
         }else{
-            baseQuery += " ORDER BY cl.clrStatus, cl.clrSurname, cl.clrName, cl.clrPatronymic, cl.clrPhone, cl.box.boxId ASC";
+            baseQuery += " ORDER BY cl.clrStatus, cl.clrSurname, cl.clrName, cl.clrPatronymic, cl.clrPhone ASC";
         }
 
         TypedQuery<Cleaner> query = entityManager.createQuery(baseQuery, Cleaner.class);
@@ -100,21 +97,26 @@ public class CleanerService {
     }
 
 
-    public List<CleanerDTO> getCleanersWithWorkSchedule(LocalDate startInterval, LocalDate endInterval, boolean currentMonth){
+    public List<CleanerDTO> getCleanersWithWorkSchedule(LocalDate startInterval, LocalDate endInterval, Long boxId, boolean currentMonth){
         List<Cleaner> cleaners = (List<Cleaner>) cleanerRepository.findAll();
-        Predicate<Cleaner> predicate = getCleanerPredicate(startInterval, endInterval, currentMonth);
+        Predicate<Cleaner> predicate = getCleanerPredicate(startInterval, endInterval, boxId, currentMonth);
+        Box box = boxService.getById(boxId).orElse(null);
+        if(box == null){
+            throw new EntityNotFoundException(String.format("Бокс с номером %d не найден",boxId));
+        }
 
         return cleaners.stream()
                 .filter(predicate)
                 .sorted(Comparator.comparing(Cleaner::getClrStatus)
-                        .thenComparing((Cleaner c) -> c.getBox() != null ? c.getBox().getBoxId() : Long.MAX_VALUE)
                         .thenComparing(Cleaner::getClrSurname)
                         .thenComparing(Cleaner::getClrName)
-                        .thenComparing(Cleaner::getClrPatronymic))
+                        .thenComparing(Cleaner::getClrPatronymic)
+                        .thenComparing(Cleaner::getClrPhone))
                 .map(cleaner -> {
-                    List<WorkSchedule> filteredSchedules = cleaner.getWorkSchedules().stream()
-                            .filter(ws -> !ws.getWsWorkDay().isBefore(startInterval) && !ws.getWsWorkDay().isAfter(endInterval))
+                    List<WorkScheduleDTO> filteredSchedules = cleaner.getWorkSchedules().stream()
+                            .filter(ws -> ws.getBox().getBoxId().equals(boxId) && !ws.getWsWorkDay().isBefore(startInterval) && !ws.getWsWorkDay().isAfter(endInterval))
                             .sorted(Comparator.comparing(WorkSchedule::getWsWorkDay))
+                            .map(WorkScheduleService::toDTO)
                             .collect(Collectors.toList());
 
                     return new CleanerDTO(
@@ -122,8 +124,9 @@ public class CleanerService {
                             cleaner.getClrSurname(),
                             cleaner.getClrName(),
                             cleaner.getClrPatronymic(),
+                            cleaner.getClrPhone(),
                             cleaner.getClrStatus(),
-                            cleaner.getBox(),
+                            box,
                             filteredSchedules
                     );
                 })
@@ -131,16 +134,16 @@ public class CleanerService {
                 .collect(Collectors.toList());
     }
 
-    private static Predicate<Cleaner> getCleanerPredicate(LocalDate startInterval, LocalDate endInterval, boolean currentMonth) {
+    private static Predicate<Cleaner> getCleanerPredicate(LocalDate startInterval, LocalDate endInterval, Long boxId, boolean currentMonth) {
         Predicate<Cleaner> predicate;
         if(currentMonth){
             predicate = cleaner -> cleaner.getClrStatus() == CleanerStatus.ACT ||
                     (cleaner.getClrStatus() == CleanerStatus.DISMISSED &&
                             cleaner.getWorkSchedules().stream()
-                                    .anyMatch(ws -> !ws.getWsWorkDay().isBefore(startInterval) && !ws.getWsWorkDay().isAfter(endInterval)));
+                                    .anyMatch(ws -> ws.getBox().getBoxId().equals(boxId) && !ws.getWsWorkDay().isBefore(startInterval) && !ws.getWsWorkDay().isAfter(endInterval)));
         }else{
             predicate = cleaner ->cleaner.getWorkSchedules().stream()
-                    .anyMatch(ws -> !ws.getWsWorkDay().isBefore(startInterval) && !ws.getWsWorkDay().isAfter(endInterval));
+                    .anyMatch(ws -> ws.getBox().getBoxId().equals(boxId) && !ws.getWsWorkDay().isBefore(startInterval) && !ws.getWsWorkDay().isAfter(endInterval));
         }
         return predicate;
     }
@@ -188,7 +191,6 @@ public class CleanerService {
         existedCleaner.setClrName(cleaner.getClrName());
         existedCleaner.setClrPatronymic(cleaner.getClrPatronymic());
         existedCleaner.setClrPhone(cleaner.getClrPhone());
-        existedCleaner.setBox(cleaner.getBox());
         existedCleaner.setClrStatus(cleaner.getClrStatus());
         if(existedCleaner.getClrStatus() == CleanerStatus.DISMISSED){
             workScheduleService.deleteByClrIdAndStartDate(existedCleaner.getClrId(), LocalDate.now());

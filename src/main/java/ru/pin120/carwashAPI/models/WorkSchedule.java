@@ -18,7 +18,7 @@ import java.time.LocalTime;
 @AllArgsConstructor
 @Getter
 @Setter
-@Table(name="work_schedule", uniqueConstraints = @UniqueConstraint(columnNames = {"ws_work_day","clr_id"}))
+@Table(name="work_schedule", uniqueConstraints = @UniqueConstraint(columnNames = {"ws_work_day","clr_id","box_id"}))
 public class WorkSchedule {
 
     @Id
@@ -31,6 +31,11 @@ public class WorkSchedule {
     @ManyToOne
     @JoinColumn(name = "clr_id", nullable = false)
     @NotNull(message = "Необходимо указать мойщика")
-    @JsonIgnore
     private Cleaner cleaner;
+
+    @ManyToOne
+    @JoinColumn(name = "box_id", nullable = false)
+    @NotNull(message = "Необходимо указать бокс")
+    private Box box;
+
 }

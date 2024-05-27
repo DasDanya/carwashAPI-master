@@ -38,12 +38,16 @@ public class CleanerDTO {
     @Pattern(regexp = "^(|[А-ЯЁа-яё-]+)$", message = "Некорректный ввод отчества")
     private String clrPatronymic;
 
+    @Size(max = 12, message = "Максимальная длина = 12 символов")
+    @Pattern(regexp = "^\\+7\\d{10}$", message = "Неверный формат номера телефона. Пример +77777777777")
+    private String clrPhone;
+
     @NotNull(message = "Необходимо указать статус")
     private CleanerStatus clrStatus;
 
     @NotNull(message = "Необходимо указать бокс")
     private Box box;
 
-    private List<WorkSchedule> workSchedules;
+    private List<WorkScheduleDTO> workSchedules;
 
 }

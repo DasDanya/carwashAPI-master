@@ -56,10 +56,6 @@ public class Cleaner {
     @Column(length = 150)
     private String clrPhotoName;
 
-    @ManyToOne
-    @JoinColumn(name = "box_id")
-    private Box box;
-
     @OneToMany(mappedBy = "cleaner", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<WorkSchedule> workSchedules;

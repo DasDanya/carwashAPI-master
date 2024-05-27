@@ -27,8 +27,9 @@ public class Box {
     @NotNull(message = "Необходимо указать статус")
     private BoxStatus boxStatus;
 
-    @OneToMany(mappedBy = "box")
+
+    @OneToMany(mappedBy = "box", cascade = CascadeType.ALL)
     @JsonIgnore
-    private List<Cleaner> cleaners;
+    private List<WorkSchedule> workSchedules;
 
 }
