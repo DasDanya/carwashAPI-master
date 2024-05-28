@@ -53,7 +53,7 @@ public class Cleaner {
     @NotNull(message = "Необходимо указать статус")
     private CleanerStatus clrStatus;
 
-    @Column(length = 150)
+    @Column(length = 20)
     private String clrPhotoName;
 
     @OneToMany(mappedBy = "cleaner", cascade = CascadeType.ALL)

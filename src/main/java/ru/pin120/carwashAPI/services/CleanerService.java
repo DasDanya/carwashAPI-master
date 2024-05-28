@@ -179,7 +179,6 @@ public class CleanerService {
     public void delete(Cleaner cleaner) throws Exception {
         String filename = cleaner.getClrPhotoName();
         cleanerRepository.delete(cleaner);
-
         if(!filename.equals(NAME_DEFAULT_PHOTO)){
             filesService.deleteFile(PATH_TO_PHOTOS + filename);
         }

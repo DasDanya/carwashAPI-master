@@ -107,7 +107,6 @@ public class CleanerController {
     @PutMapping("/edit/{id}")
     public ResponseEntity<?> edit(@PathVariable("id") Long id, @RequestPart @Valid Cleaner cleaner, BindingResult bindingResult, @RequestPart(required = false) MultipartFile photo){
         try{
-            System.out.println("edit");
             Optional<Cleaner> cleanerOptional = cleanerService.getById(id);
             if(cleanerOptional.isEmpty()){
                 return new ResponseEntity<>(String.format("Мойщик с id = %d не существует в базе данных",id), HttpStatus.BAD_REQUEST);
