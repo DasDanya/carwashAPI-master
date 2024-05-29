@@ -47,7 +47,6 @@ public class SupplyService {
         String baseQuery = "SELECT s FROM Supply s";
         String partQuery = "";
         Map<String, Object> parameters = new HashMap<>();
-        System.out.println(operator);
         if(supName != null){
             partQuery = " LOWER(s.supName) LIKE LOWER(CONCAT('%', :name, '%'))";
             parameters.put("name", supName);
@@ -111,6 +110,10 @@ public class SupplyService {
         }
     }
 
+    public void save(Supply supply){
+        supplyRepository.save(supply);
+    }
+
     public byte[] getPhoto(String photoName) throws IOException {
         return filesService.getFile(PATH_TO_PHOTOS + photoName);
     }
@@ -136,7 +139,7 @@ public class SupplyService {
                 if(!existedSupply.getSupPhotoName().equals(NAME_DEFAULT_PHOTO)){
                     filesService.deleteFile(PATH_TO_PHOTOS + existedSupply.getSupPhotoName());
                 }
-                String photoName = existedSupply.getSupPhotoName() + photo.getOriginalFilename().substring(photo.getOriginalFilename().lastIndexOf('.'));
+                String photoName = existedSupply.getSupId() + photo.getOriginalFilename().substring(photo.getOriginalFilename().lastIndexOf('.'));
                 filesService.saveImage(photo, PATH_TO_PHOTOS + photoName);
                 existedSupply.setSupPhotoName(photoName);
             }else{

@@ -90,12 +90,11 @@ public class SupplyController {
             }
 
             Supply existedSupply = supplyOptional.get();
-            // условие, что нельзя удалять мойщика
-//            if(!existedTransport.getBookings().isEmpty()){
-//                return new ResponseEntity<>(String.format("Нельзя удалить транспорт %s %s, так как он указан в заказе", existedTransport.getTransport().getTrMark(), existedTransport.getTransport().getTrModel()), HttpStatus.BAD_REQUEST);
-//            }
-
-            supplyService.delete(existedSupply);
+            if(!existedSupply.getSuppliesInBoxes().isEmpty()){
+                return new ResponseEntity<>(String.format("Нельзя удалить автомоечное средство %s %s, так как оно указано в боксе %d", existedSupply.getCategory().getCSupName(), existedSupply.getSupName(), existedSupply.getSuppliesInBoxes().get(0).getBox().getBoxId()), HttpStatus.BAD_REQUEST);
+            }else{
+                supplyService.delete(existedSupply);
+            }
         }catch (Exception e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }

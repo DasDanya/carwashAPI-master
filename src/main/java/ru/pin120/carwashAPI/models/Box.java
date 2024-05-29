@@ -32,4 +32,8 @@ public class Box {
     @JsonIgnore
     private List<WorkSchedule> workSchedules;
 
+    @OneToMany(mappedBy = "box", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<SuppliesInBox> suppliesInBoxes;
+
 }

@@ -1,11 +1,14 @@
 package ru.pin120.carwashAPI.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.List;
 
 @Entity
 @AllArgsConstructor
@@ -37,5 +40,9 @@ public class Supply {
     @JoinColumn(name = "sup_cat", nullable = false)
     @NotNull(message = "Необходимо указать категорию")
     private CategoryOfSupplies category;
+
+    @OneToMany(mappedBy = "supply", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<SuppliesInBox> suppliesInBoxes;
 
 }
