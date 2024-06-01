@@ -59,4 +59,8 @@ public class Cleaner {
     @OneToMany(mappedBy = "cleaner", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<WorkSchedule> workSchedules;
+
+    @OneToMany(mappedBy = "cleaner")
+    @JsonIgnore
+    private List<Booking> bookings;
 }

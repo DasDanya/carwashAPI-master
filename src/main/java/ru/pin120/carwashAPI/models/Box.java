@@ -36,4 +36,9 @@ public class Box {
     @JsonIgnore
     private List<SuppliesInBox> suppliesInBoxes;
 
+    @OneToMany(mappedBy = "box")
+    @JsonIgnore
+    private List<Booking> bookings;
+
+
 }

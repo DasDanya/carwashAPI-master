@@ -5,10 +5,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import ru.pin120.carwashAPI.dtos.ServiceWithPriceListDTO;
 import ru.pin120.carwashAPI.models.PriceList;
 import ru.pin120.carwashAPI.services.PriceListService;
 import ru.pin120.carwashAPI.services.ValidateInputService;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,6 +38,16 @@ public class PriceListController {
         }
 
         return new ResponseEntity<>(priceListList, HttpStatus.OK);
+    }
+
+    @GetMapping("/getPriceListOfCategoryTransport")
+    public ResponseEntity<?> getPriceListOfCategoryTransport(@RequestParam(value = "catTrId") Long catTrId){
+        try{
+            List<ServiceWithPriceListDTO> serviceWithPriceListDTOS = priceListService.getTransportPriceList(catTrId);
+            return new ResponseEntity<>(serviceWithPriceListDTOS, HttpStatus.OK);
+        }catch (Exception e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @GetMapping

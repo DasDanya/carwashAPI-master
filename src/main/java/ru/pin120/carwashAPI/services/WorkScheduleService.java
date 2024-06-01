@@ -5,11 +5,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.pin120.carwashAPI.dtos.CleanerDTO;
 import ru.pin120.carwashAPI.dtos.ResultCreateWorkSchedulesDTO;
 import ru.pin120.carwashAPI.dtos.WorkScheduleDTO;
 import ru.pin120.carwashAPI.models.Box;
 import ru.pin120.carwashAPI.models.Cleaner;
+import ru.pin120.carwashAPI.models.CleanerStatus;
 import ru.pin120.carwashAPI.models.WorkSchedule;
 import ru.pin120.carwashAPI.repositories.CleanerRepository;
 import ru.pin120.carwashAPI.repositories.WorkScheduleRepository;
@@ -62,29 +64,33 @@ public class WorkScheduleService {
                 throw new EntityNotFoundException(String.format("Мойщика с id=%d не существует в базе данных", cleanerDTO.getClrId()));
             }else{
                 Cleaner cleaner = cleanerOptional.get();
-                Box box = cleanerDTO.getBox();
-                for(WorkScheduleDTO workSchedule: cleanerDTO.getWorkSchedules()){
-                    WorkSchedule existsWorkSchedule = cleaner.getWorkSchedules().stream()
-                            .filter(w->w.getWsWorkDay().equals(workSchedule.getWsWorkDay()))
-                            .findFirst()
-                            .orElse(null);
+                if(cleaner.getClrStatus() == CleanerStatus.ACT) {
+                    Box box = cleanerDTO.getBox();
+                    for (WorkScheduleDTO workSchedule : cleanerDTO.getWorkSchedules()) {
+                        WorkSchedule existsWorkSchedule = cleaner.getWorkSchedules().stream()
+                                .filter(w -> w.getWsWorkDay().equals(workSchedule.getWsWorkDay()))
+                                .findFirst()
+                                .orElse(null);
 
-                    if(existsWorkSchedule != null){
-                        if(existsWorkSchedule.getWsWorkDay().equals(LocalDate.now())) {
-                            conflictMessage += String.format("%s %s %s %s работает в боксе %d \n", existsWorkSchedule.getCleaner().getClrSurname(), existsWorkSchedule.getCleaner().getClrName(), existsWorkSchedule.getCleaner().getClrPatronymic() == null ? ""
-                                    : existsWorkSchedule.getCleaner().getClrPatronymic(), existsWorkSchedule.getWsWorkDay().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")), existsWorkSchedule.getBox().getBoxId());
-                        }else{
-                            conflictMessage += String.format("%s %s %s %s будет работать в боксе %d \n", existsWorkSchedule.getCleaner().getClrSurname(), existsWorkSchedule.getCleaner().getClrName(), existsWorkSchedule.getCleaner().getClrPatronymic() == null ? ""
-                                    : existsWorkSchedule.getCleaner().getClrPatronymic(), existsWorkSchedule.getWsWorkDay().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")), existsWorkSchedule.getBox().getBoxId());
+                        if (existsWorkSchedule != null) {
+                            if (existsWorkSchedule.getWsWorkDay().equals(LocalDate.now())) {
+                                conflictMessage += String.format("%s %s %s %s работает в боксе %d \n", existsWorkSchedule.getCleaner().getClrSurname(), existsWorkSchedule.getCleaner().getClrName(), existsWorkSchedule.getCleaner().getClrPatronymic() == null ? ""
+                                        : existsWorkSchedule.getCleaner().getClrPatronymic(), existsWorkSchedule.getWsWorkDay().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")), existsWorkSchedule.getBox().getBoxId());
+                            } else {
+                                conflictMessage += String.format("%s %s %s %s будет работать в боксе %d \n", existsWorkSchedule.getCleaner().getClrSurname(), existsWorkSchedule.getCleaner().getClrName(), existsWorkSchedule.getCleaner().getClrPatronymic() == null ? ""
+                                        : existsWorkSchedule.getCleaner().getClrPatronymic(), existsWorkSchedule.getWsWorkDay().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")), existsWorkSchedule.getBox().getBoxId());
+                            }
+                        } else {
+                            WorkSchedule createdWorkScheduleItem = new WorkSchedule();
+                            createdWorkScheduleItem.setWsWorkDay(workSchedule.getWsWorkDay());
+                            createdWorkScheduleItem.setCleaner(cleaner);
+                            createdWorkScheduleItem.setBox(box);
+
+                            createdWorkScheduleItems.add(createdWorkScheduleItem);
                         }
-                    }else {
-                        WorkSchedule createdWorkScheduleItem = new WorkSchedule();
-                        createdWorkScheduleItem.setWsWorkDay(workSchedule.getWsWorkDay());
-                        createdWorkScheduleItem.setCleaner(cleaner);
-                        createdWorkScheduleItem.setBox(box);
-
-                        createdWorkScheduleItems.add(createdWorkScheduleItem);
                     }
+                }else{
+                    throw new IllegalArgumentException("Нельзя устанавливать график работы уволенному мойщику");
                 }
             }
         }

@@ -28,16 +28,28 @@ public class ClientsTransportController {
         this.validateInputService = validateInputService;
     }
 
-    @GetMapping("/getByClient")
-    public ResponseEntity<List<ClientsTransport>> getByClientId(@RequestParam("clId") Long clientId, @RequestParam(value = "mark", required = false) String mark, @RequestParam(value = "model", required = false) String model,
+    @GetMapping("/byClient")
+    public ResponseEntity<List<ClientsTransport>> getByClientId(@RequestParam(value = "clId") Long clientId, @RequestParam(value = "mark", required = false) String mark, @RequestParam(value = "model", required = false) String model,
                                                                 @RequestParam(value = "category", required = false) String category, @RequestParam(value = "stateNumber", required = false) String stateNumber){
         try{
             List<ClientsTransport> clientsTransports;
-            if(mark == null && model == null && category == null && stateNumber == null) {
+            if (mark == null && model == null && category == null && stateNumber == null) {
                 clientsTransports = clientsTransportService.getByClientId(clientId);
-            }else{
-                clientsTransports = clientsTransportService.search(clientId,mark,model,category,stateNumber);
+            } else {
+                clientsTransports = clientsTransportService.search(clientId, mark, model, category, stateNumber);
             }
+
+            return new ResponseEntity<>(clientsTransports, HttpStatus.OK);
+        }catch (Exception e){
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/byStateNumber")
+    public ResponseEntity<List<ClientsTransport>> getByStateNumber(@RequestParam(value = "stateNumber") String stateNumber){
+        try{
+            List<ClientsTransport> clientsTransports;
+            clientsTransports = clientsTransportService.getByStateNumber(stateNumber);
             return new ResponseEntity<>(clientsTransports, HttpStatus.OK);
         }catch (Exception e){
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);

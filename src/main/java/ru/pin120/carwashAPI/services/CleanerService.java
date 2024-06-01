@@ -158,6 +158,7 @@ public class CleanerService {
     }
 
     public void create(Cleaner cleaner, MultipartFile photo) throws Exception {
+        cleaner.setClrStatus(CleanerStatus.ACT);
         boolean saveDefaultPhoto = photo == null;
         if(saveDefaultPhoto){
             cleaner.setClrPhotoName(NAME_DEFAULT_PHOTO);

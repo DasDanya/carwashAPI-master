@@ -58,7 +58,7 @@ public class WorkScheduleController {
             }
 
         }catch (Exception e){
-            if(e instanceof EntityNotFoundException){
+            if(e instanceof EntityNotFoundException || e instanceof IllegalArgumentException){
                 return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
             }
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);

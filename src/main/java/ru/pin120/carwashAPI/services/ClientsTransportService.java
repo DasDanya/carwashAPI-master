@@ -2,6 +2,7 @@ package ru.pin120.carwashAPI.services;
 
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.pin120.carwashAPI.models.ClientsTransport;
 import ru.pin120.carwashAPI.repositories.ClientsTransportRepository;
@@ -79,5 +80,13 @@ public class ClientsTransportService {
         }
 
         return null;
+    }
+
+    public List<ClientsTransport> getAll() {
+        return (List<ClientsTransport>) clientsTransportRepository.findAll(Sort.by("transport.trMark", "transport.trModel", "transport.categoryOfTransport.catTrName", "clTrStateNumber"));
+    }
+
+    public List<ClientsTransport> getByStateNumber(String stateNumber) {
+        return clientsTransportRepository.findByStateNumber(stateNumber);
     }
 }

@@ -1,6 +1,5 @@
 package ru.pin120.carwashAPI.services;
 
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.pin120.carwashAPI.models.Box;
 import ru.pin120.carwashAPI.models.BoxStatus;
@@ -23,7 +22,7 @@ public class BoxService {
     }
 
     public List<Box> getAvailable(){
-        return boxRepository.findAvailable(BoxStatus.REPAIR);
+        return boxRepository.findAvailable(BoxStatus.CLOSED);
     }
 
     public void save(Box box){

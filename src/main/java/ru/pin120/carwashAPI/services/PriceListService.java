@@ -3,6 +3,7 @@ package ru.pin120.carwashAPI.services;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import ru.pin120.carwashAPI.dtos.ServiceWithPriceListDTO;
 import ru.pin120.carwashAPI.models.PriceList;
 import ru.pin120.carwashAPI.repositories.PriceListRepository;
 
@@ -25,6 +26,18 @@ public class PriceListService {
     public List<PriceList> getByServName(String servName){
         return priceListRepository.findByServiceName(servName);
 
+    }
+
+    public List<ServiceWithPriceListDTO> getTransportPriceList(Long catTrId){
+        List<ServiceWithPriceListDTO> serviceWithPriceListDTOS = new ArrayList<>();
+        List<PriceList> priceLists = priceListRepository.findByCategoryOfTransportCatTrId(catTrId);
+
+        for(PriceList priceListPosition: priceLists){
+            ServiceWithPriceListDTO serviceWithPriceListDTO = new ServiceWithPriceListDTO(priceListPosition.getService().getCategory().getCatName(), priceListPosition.getService().getServName(), priceListPosition.getPlPrice(), priceListPosition.getPlTime());
+            serviceWithPriceListDTOS.add(serviceWithPriceListDTO);
+        }
+
+        return serviceWithPriceListDTOS;
     }
 
     public boolean existPriceListPosition(PriceList priceListPosition){
