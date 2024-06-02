@@ -193,6 +193,13 @@ public class CleanerService {
         existedCleaner.setClrPhone(cleaner.getClrPhone());
         existedCleaner.setClrStatus(cleaner.getClrStatus());
         if(existedCleaner.getClrStatus() == CleanerStatus.DISMISSED){
+            WorkSchedule workSchedule = existedCleaner.getWorkSchedules().stream()
+                    .filter(w->w.getWsWorkDay().equals(LocalDate.now()))
+                    .findFirst()
+                    .orElse(null);
+            if(workSchedule != null){
+                throw new IllegalArgumentException(String.format("Нельзя уволить мойщика %s %s %s, так как он сегодня работает", existedCleaner.getClrSurname(), existedCleaner.getClrName(), existedCleaner.getClrPatronymic() == null ? "" : existedCleaner.getClrPatronymic()));
+            }
             workScheduleService.deleteByClrIdAndStartDate(existedCleaner.getClrId(), LocalDate.now());
         }
 

@@ -120,10 +120,9 @@ public class ClientsTransportController {
             }
 
             ClientsTransport existedTransport = clientsTransportOptional.get();
-            // условие, что нельзя удалять, если есть заказы
-//            if(!existedTransport.getBookings().isEmpty()){
-//                return new ResponseEntity<>(String.format("Нельзя удалить транспорт %s %s, так как он указан в заказе", existedTransport.getTransport().getTrMark(), existedTransport.getTransport().getTrModel()), HttpStatus.BAD_REQUEST);
-//            }
+            if(!existedTransport.getBookings().isEmpty()){
+                return new ResponseEntity<>(String.format("Нельзя удалить транспорт %s %s %s, так как он указан в заказе", existedTransport.getTransport().getTrMark(), existedTransport.getTransport().getTrModel(), existedTransport.getClTrStateNumber()), HttpStatus.BAD_REQUEST);
+            }
 
             clientsTransportService.deleteById(existedTransport.getClTrId());
         }catch (Exception e){

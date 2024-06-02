@@ -1,5 +1,6 @@
 package ru.pin120.carwashAPI.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
@@ -11,6 +12,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.List;
 
 @Entity
 @Getter
@@ -40,5 +43,9 @@ public class ClientsTransport {
     @JoinColumn(name = "cl_id",nullable = false)
     @Valid
     private Client client;
+
+    @OneToMany(mappedBy = "clientTransport")
+    @JsonIgnore
+    private List<Booking> bookings;
 
 }

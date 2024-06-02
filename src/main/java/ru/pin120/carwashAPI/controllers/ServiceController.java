@@ -173,12 +173,10 @@ public class ServiceController {
 
             Service service = serviceOptional.get();
 
-            // написать условие для удаления
-//            if(!category.getServices().isEmpty()){
-//                return new ResponseEntity<>(String.format("Нельзя удалить категорию %s, так как у неё есть услуги", category.getCatName()), HttpStatus.BAD_REQUEST);
-//            }else{
-//                categoryOfServicesService.delete(category.getCatName());
-//            }
+            if(!service.getBookings().isEmpty()){
+                return new ResponseEntity<>(String.format("Нельзя удалить услугу %s, так как она указана в заказе", service.getServName()), HttpStatus.BAD_REQUEST);
+            }
+
             servService.delete(service.getServName());
         }catch (Exception e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);

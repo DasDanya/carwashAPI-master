@@ -6,6 +6,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ru.pin120.carwashAPI.models.SuppliesInBox;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -14,4 +15,6 @@ public interface SuppliesInBoxRepository extends JpaRepository<SuppliesInBox, Lo
 
     @Query("SELECT COUNT(s) FROM SuppliesInBox s WHERE s.box.boxId = :boxId AND s.supply.supId = :supId AND  s.sibId <> :sibId")
     int countByBoxIdAndSupplyIdExceptCurrent(@Param("boxId") Long boxId, @Param("supId") Long supId, @Param("sibId") Long sibId);
+
+    List<SuppliesInBox> findByBox_BoxIdAndSupply_Category_cSupNameAndCountSuppliesGreaterThan(Long boxId, String catName, int count);
 }

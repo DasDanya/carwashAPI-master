@@ -15,6 +15,7 @@ public interface PriceListRepository extends PagingAndSortingRepository<PriceLis
     @Query("SELECT p FROM PriceList p WHERE p.service.servName = :servName ORDER BY p.categoryOfTransport.catTrName ASC")
     List<PriceList> findByServiceName(@Param("servName") String servName);
 
+
     @Query("SELECT p FROM PriceList p WHERE p.categoryOfTransport.catTrId = :catTrId ORDER BY p.service.category.catName, p.service.servName ASC")
     List<PriceList> findByCategoryOfTransportCatTrId(Long catTrId);
 

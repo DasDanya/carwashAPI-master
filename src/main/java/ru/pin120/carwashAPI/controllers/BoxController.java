@@ -5,8 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import ru.pin120.carwashAPI.models.Box;
-import ru.pin120.carwashAPI.models.ClientsTransport;
+import ru.pin120.carwashAPI.models.*;
 import ru.pin120.carwashAPI.services.BoxService;
 import ru.pin120.carwashAPI.services.ValidateInputService;
 
@@ -77,9 +76,18 @@ public class BoxController {
                 return new ResponseEntity<>(validateInputService.getErrors(bindingResult), HttpStatus.BAD_REQUEST);
             }
 
+            if(box.getBoxStatus() == BoxStatus.CLOSED){
+                Booking booking = existedBox.getBookings().stream()
+                        .filter(b->b.getBkStatus() == BookingStatus.IN_PROGRESS)
+                        .findFirst()
+                        .orElse(null);
+                if(booking != null){
+                    return new ResponseEntity<>("Нельзя закрыть бокс, так как в нем выполняется заказ №" + booking.getBkId(), HttpStatus.BAD_REQUEST);
+                }
+            }
+
             existedBox.setBoxStatus(box.getBoxStatus());
             boxService.save(existedBox);
-
             return new ResponseEntity<>(existedBox, HttpStatus.OK);
 
         }catch (Exception e){
@@ -98,10 +106,9 @@ public class BoxController {
             }
 
             Box existedBox = boxOptional.get();
-            // условие, что нельзя удалять бокс
-//            if(!existedTransport.getBookings().isEmpty()){
-//                return new ResponseEntity<>(String.format("Нельзя удалить транспорт %s %s, так как он указан в заказе", existedTransport.getTransport().getTrMark(), existedTransport.getTransport().getTrModel()), HttpStatus.BAD_REQUEST);
-//            }
+            if(!existedBox.getBookings().isEmpty()){
+                return new ResponseEntity<>(String.format("Нельзя удалить бокс №%d, так как он указан в заказе", existedBox.getBoxId()), HttpStatus.BAD_REQUEST);
+            }
 
             boxService.delete(existedBox.getBoxId());
         }catch (Exception e){

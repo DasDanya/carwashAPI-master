@@ -44,6 +44,10 @@ public class PriceListService {
         return priceListRepository.findByCategoryOfTransportCatTrIdAndServiceServName(priceListPosition.getCategoryOfTransport().getCatTrId(), priceListPosition.getService().getServName()).isPresent();
     }
 
+    public boolean existPriceListPosition(Long catTrId, String servName){
+        return priceListRepository.findByCategoryOfTransportCatTrIdAndServiceServName(catTrId, servName).isPresent();
+    }
+
     public boolean existsOtherPriceListPosition(PriceList priceListPosition){
         Optional<PriceList> priceListOptional = priceListRepository.findByCategoryOfTransportCatTrIdAndServiceServName(priceListPosition.getCategoryOfTransport().getCatTrId(), priceListPosition.getService().getServName());
         if(priceListOptional.isEmpty()){

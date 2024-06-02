@@ -47,6 +47,10 @@ public class Service {
             uniqueConstraints = @UniqueConstraint(columnNames = {"serv_name", "c_sup_name"}))
     private List<CategoryOfSupplies> categoriesOfSupplies;
 
+    @ManyToMany(mappedBy = "services")
+    @JsonIgnore
+    private List<Booking> bookings;
+
     public Service(String servName, CategoryOfServices category) {
         this.servName = servName;
         this.category = category;

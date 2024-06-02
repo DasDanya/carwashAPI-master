@@ -124,8 +124,7 @@ public class CleanerController {
             return new ResponseEntity<>(existedCleaner, HttpStatus.OK);
 
         }catch (Exception e){
-            e.printStackTrace();
-            if(e instanceof FileIsNotImageException){
+            if(e instanceof FileIsNotImageException || e instanceof IllegalArgumentException){
                 return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
             }else {
                 return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -142,10 +141,9 @@ public class CleanerController {
             }
 
             Cleaner existedCleaner = cleanerOptional.get();
-            // условие, что нельзя удалять мойщика
-//            if(!existedTransport.getBookings().isEmpty()){
-//                return new ResponseEntity<>(String.format("Нельзя удалить транспорт %s %s, так как он указан в заказе", existedTransport.getTransport().getTrMark(), existedTransport.getTransport().getTrModel()), HttpStatus.BAD_REQUEST);
-//            }
+            if(!existedCleaner.getBookings().isEmpty()){
+                return new ResponseEntity<>(String.format("Нельзя удалить мойщика %s %s %s, так как он указан в заказе", existedCleaner.getClrSurname(), existedCleaner.getClrName(), existedCleaner.getClrPatronymic() == null ? "" : existedCleaner.getClrPatronymic()), HttpStatus.BAD_REQUEST);
+            }
 
             cleanerService.delete(existedCleaner);
         }catch (Exception e){

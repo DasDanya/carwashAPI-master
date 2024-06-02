@@ -1,7 +1,6 @@
 package ru.pin120.carwashAPI.dtos;
 
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -9,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import ru.pin120.carwashAPI.models.BookingStatus;
 import ru.pin120.carwashAPI.models.Box;
 import ru.pin120.carwashAPI.models.Cleaner;
 import ru.pin120.carwashAPI.models.ClientsTransport;
@@ -21,6 +21,13 @@ import java.util.List;
 @Getter
 @Setter
 public class BookingDTO {
+
+    private String bkId;
+
+    @Column(length = 30)
+    @Enumerated(EnumType.STRING)
+    @NotNull(message = "Необходимо указать статус")
+    private BookingStatus bkStatus;
 
     @NotNull(message = "Необходимо указать время начала выполнения заказа")
     private LocalDateTime bkStartTime;

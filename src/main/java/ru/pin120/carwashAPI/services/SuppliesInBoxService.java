@@ -130,4 +130,8 @@ public class SuppliesInBoxService {
 
         suppliesInBoxRepository.save(existedsuppliesInBox);
     }
+
+    public List<SuppliesInBox> getListExistingSuppliesCertainCategory(Long boxId, String categoryName){
+        return suppliesInBoxRepository.findByBox_BoxIdAndSupply_Category_cSupNameAndCountSuppliesGreaterThan(boxId, categoryName, 0);
+    }
 }
