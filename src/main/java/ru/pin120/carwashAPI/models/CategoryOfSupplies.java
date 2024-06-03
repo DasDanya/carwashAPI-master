@@ -23,8 +23,8 @@ import java.util.List;
 public class CategoryOfSupplies {
 
     @Id
-    @Column(unique = true,nullable = false, length = 30)
-    @Size(max = 30, message = "Максимальная длина 30 символов")
+    @Column(unique = true,nullable = false, length = 50)
+    @Size(max = 50, message = "Максимальная длина 50 символов")
     @Pattern(regexp = "^[а-яА-ЯёЁ -]+$", message = "Допустимые символы для названия: кириллица и пробелы")
     @NotBlank(message = "Необходимо ввести название категории автомоечных средств")
     private String cSupName;

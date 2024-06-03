@@ -32,8 +32,6 @@ public class CategoryOfServicesController {
     private final CategoryOfServicesService categoryOfServicesService;
     private final ValidateInputService validateInputService;
 
-    @Autowired
-    private MessageSource messageSource;
 
     public CategoryOfServicesController(CategoryOfServicesService categoryOfServicesService, ValidateInputService validateInputService) {
         this.categoryOfServicesService = categoryOfServicesService;
@@ -47,7 +45,6 @@ public class CategoryOfServicesController {
         try{
             categories = (List<CategoryOfServices>) categoryOfServicesService.getAll();
         }catch (Exception e){
-            e.printStackTrace();
             return new ResponseEntity<>(categories, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 

@@ -32,8 +32,6 @@ public class ServiceController {
 
     private final ValidateInputService validateInputService;
 
-    @Autowired
-    private MessageSource messageSource;
 
     public ServiceController(ServService servService, ValidateInputService validateInputService) {
         this.servService = servService;

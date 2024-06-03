@@ -1,9 +1,16 @@
 package ru.pin120.carwashAPI.services;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.pin120.carwashAPI.dtos.BookingDTO;
+import ru.pin120.carwashAPI.dtos.BookingsInfoDTO;
+import ru.pin120.carwashAPI.dtos.InfoAboutWorkOfCleaner;
 import ru.pin120.carwashAPI.dtos.ServiceWithPriceListDTO;
 import ru.pin120.carwashAPI.models.*;
 import ru.pin120.carwashAPI.repositories.BookingRepository;
@@ -12,10 +19,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class BookingService {
@@ -28,6 +33,12 @@ public class BookingService {
 
     private final LocalTime START_WORK_TIME = LocalTime.of(8,0);
     private final LocalTime END_WORK_TIME = LocalTime.of(20, 0);
+    private static final double CLEANER_STAKE = 0.3;
+
+    private final int COUNT_ITEMS_IN_PAGE = 2;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public BookingService(BookingRepository bookingRepository, BookingIdSequenceService bookingIdSequenceService, ServService servService, SuppliesInBoxService suppliesInBoxService, PriceListService priceListService) {
         this.bookingRepository = bookingRepository;
@@ -95,11 +106,11 @@ public class BookingService {
             if(serviceOptional.isEmpty()){
                 throw new IllegalArgumentException("В базе данных отсутствует услуга " + serviceDTO.getServName());
             }else{
-                ru.pin120.carwashAPI.models.Service service = serviceOptional.get();
-                if(service.getCategoriesOfSupplies().isEmpty()){
-                    throw new IllegalArgumentException(String.format("Услуге %s необходимо указать необходимую для выполнения категорию автомоечных средств", service.getServName()));
-                }
-                createdBooking.getServices().add(service);
+//                ru.pin120.carwashAPI.models.Service service = serviceOptional.get();
+//                if(service.getCategoriesOfSupplies().isEmpty()){
+//                    throw new IllegalArgumentException(String.format("Услуге %s необходимо указать необходимую для выполнения категорию автомоечных средств", service.getServName()));
+//                }
+                createdBooking.getServices().add(serviceOptional.get());
                 price+=serviceDTO.getPlPrice();
             }
         }
@@ -167,10 +178,10 @@ public class BookingService {
 
                     CategoryOfTransport categoryOfTransport = existedBooking.getClientTransport().getTransport().getCategoryOfTransport();
                     for(ru.pin120.carwashAPI.models.Service service: existedBooking.getServices()){
-                        List<CategoryOfSupplies> categoriesOfSupplies = service.getCategoriesOfSupplies();
                         if(!priceListService.existPriceListPosition(categoryOfTransport.getCatTrId(), service.getServName())){
                             throw new IllegalArgumentException(String.format("Нельзя начать выполнение заказа, так как в настоящее время для категории транспорта %s отсутствует возможность выполнения услуги %s", categoryOfTransport.getCatTrName(), service.getServName()));
                         }
+                        List<CategoryOfSupplies> categoriesOfSupplies = service.getCategoriesOfSupplies();
                         for (CategoryOfSupplies category : categoriesOfSupplies) {
                             List<SuppliesInBox> suppliesInBox = suppliesInBoxService.getListExistingSuppliesCertainCategory(existedBooking.getBox().getBoxId(), category.getCSupName());
                             if (suppliesInBox.isEmpty()) {
@@ -281,10 +292,10 @@ public class BookingService {
             if(serviceOptional.isEmpty()){
                 throw new IllegalArgumentException("В базе данных отсутствует услуга " + serviceDTO.getServName());
             }else{
-                ru.pin120.carwashAPI.models.Service service = serviceOptional.get();
-                if(service.getCategoriesOfSupplies().isEmpty()){
-                    throw new IllegalArgumentException(String.format("Услуге %s необходимо указать необходимую для выполнения категорию автомоечных средств", service.getServName()));
-                }
+//                ru.pin120.carwashAPI.models.Service service = serviceOptional.get();
+//                if(service.getCategoriesOfSupplies().isEmpty()){
+//                    throw new IllegalArgumentException(String.format("Услуге %s необходимо указать необходимую для выполнения категорию автомоечных средств", service.getServName()));
+//                }
                 existedBooking.getServices().add(serviceOptional.get());
                 price+=serviceDTO.getPlPrice();
             }
@@ -292,5 +303,135 @@ public class BookingService {
         existedBooking.setBkPrice(calculatePrice(price, existedBooking.getClientTransport().getClient().getClDiscount()));
         bookingRepository.save(existedBooking);
 
+    }
+
+    private TypedQuery<Booking> createQuery(Long cleanerId, Long clientId, Long boxId, LocalDateTime startInterval, LocalDateTime endInterval, BookingStatus bookingStatus, String compareOperator, Integer price){
+        Map<String, Object> parameters = new HashMap<>();
+        String baseQuery = "SELECT b FROM Booking b ";
+        String partQuery = "";
+        if(cleanerId != null){
+            partQuery = " b.cleaner.clrId = :cleanerId ";
+            parameters.put("cleanerId", cleanerId);
+        }
+        if(clientId != null){
+            if(partQuery.isBlank()){
+                partQuery = " b.clientTransport.client.clId = :clientId ";
+            }else{
+                partQuery += " AND b.clientTransport.client.clId = :clientId ";
+            }
+            parameters.put("clientId", clientId);
+        }
+        if(boxId != null){
+            if(partQuery.isBlank()){
+                partQuery = " b.box.boxId = :boxId ";
+            }else{
+                partQuery += " AND b.box.boxId = :boxId ";
+            }
+            parameters.put("boxId", boxId);
+        }
+        if(startInterval != null){
+            if(partQuery.isBlank()){
+                partQuery = " b.bkStartTime >= :startInterval ";
+            }else {
+                partQuery += " AND b.bkStartTime >= :startInterval ";
+            }
+            parameters.put("startInterval", startInterval);
+        }
+        if(endInterval != null){
+            if(partQuery.isBlank()) {
+                partQuery = " b.bkStartTime <= :endInterval ";
+            }else{
+                partQuery += " AND b.bkStartTime <= :endInterval ";
+            }
+            parameters.put("endInterval", endInterval);
+        }
+        if(bookingStatus != null){
+            if(partQuery.isBlank()) {
+                partQuery = " b.bkStatus = :status ";
+            }else {
+                partQuery += " AND b.bkStatus = :status ";
+            }
+            parameters.put("status", bookingStatus);
+        }
+        if(compareOperator != null && price != null){
+            if(partQuery.isBlank()) {
+                partQuery = " b.bkPrice " + compareOperator + " :price";
+            }else{
+                partQuery += " AND b.bkPrice " + compareOperator + " :price";
+            }
+            parameters.put("price", price);
+        }
+        if(!partQuery.isBlank()) {
+            partQuery += " ORDER BY b.bkEndTime DESC";
+            baseQuery = baseQuery + " WHERE " + partQuery;
+        }else{
+            baseQuery += " ORDER BY b.bkEndTime DESC";
+        }
+
+
+        TypedQuery<Booking> query = entityManager.createQuery(baseQuery, Booking.class);
+        for (Map.Entry<String, Object> entry : parameters.entrySet()) {
+            query.setParameter(entry.getKey(), entry.getValue());
+        }
+
+        return query;
+    }
+
+    public List<Booking> getClientBookings(Integer pageIndex, Long cleanerId, Long clientId, Long boxId, LocalDateTime startInterval, LocalDateTime endInterval, BookingStatus bookingStatus, String compareOperator, Integer price) {
+
+        Pageable pageable = PageRequest.of(pageIndex, COUNT_ITEMS_IN_PAGE);
+        TypedQuery<Booking> query = createQuery(cleanerId, clientId, boxId, startInterval, endInterval, bookingStatus, compareOperator, price);
+        query.setFirstResult((int) pageable.getOffset());
+        query.setMaxResults(pageable.getPageSize());
+
+        return query.getResultList();
+
+    }
+
+    public BookingsInfoDTO getBookingsInfo(Long cleanerId, Long clientId, Long boxId, LocalDateTime startInterval, LocalDateTime endInterval, BookingStatus bookingStatus, String compareOperator, Integer price){
+        TypedQuery<Booking> query = createQuery(cleanerId, clientId, boxId, startInterval, endInterval, bookingStatus, compareOperator, price);
+        List<Booking> bookings = query.getResultList();
+
+        int totalPrice = bookings.stream()
+                .mapToInt(Booking::getBkPrice)
+                .sum();
+
+        return new BookingsInfoDTO(bookings.size(), totalPrice);
+    }
+
+    public Map<LocalDate, BookingsInfoDTO> infoAboutWorkOfCleaner(Long cleanerId, LocalDateTime startInterval, LocalDateTime endInterval){
+        Map<String, Object> parameters = new HashMap<>();
+        String baseQuery = "SELECT b FROM Booking b WHERE b.cleaner.clrId = :cleanerId AND b.bkStatus = :bkStatus ";
+        parameters.put("cleanerId", cleanerId);
+        parameters.put("bkStatus", BookingStatus.DONE);
+        if(startInterval != null){
+            baseQuery += " AND b.bkStartTime >= :startInterval ";
+            parameters.put("startInterval", startInterval);
+        }
+        if(endInterval != null){
+            baseQuery += " AND b.bkStartTime <= :endInterval ";
+            parameters.put("endInterval", endInterval);
+        }
+
+        TypedQuery<Booking> query = entityManager.createQuery(baseQuery, Booking.class);
+        for (Map.Entry<String, Object> entry : parameters.entrySet()) {
+            query.setParameter(entry.getKey(), entry.getValue());
+        }
+
+        List<Booking> bookings = query.getResultList();
+
+        return bookings.stream()
+                .collect(Collectors.groupingBy(
+                        booking -> booking.getBkStartTime().toLocalDate(),
+                        Collectors.collectingAndThen(Collectors.toList(), this::calculateSummary)
+                ));
+    }
+
+    private BookingsInfoDTO calculateSummary(List<Booking> bookings) {
+        int count = bookings.size();
+        int totalCost = (int) Math.ceil(bookings.stream()
+                .mapToInt(Booking::getBkPrice)
+                .sum() * CLEANER_STAKE);
+        return new BookingsInfoDTO(count, totalCost);
     }
 }

@@ -8,15 +8,18 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ru.pin120.carwashAPI.Exceptions.FileIsNotImageException;
 import ru.pin120.carwashAPI.dtos.BookingDTO;
+import ru.pin120.carwashAPI.dtos.BookingsInfoDTO;
 import ru.pin120.carwashAPI.models.Booking;
 import ru.pin120.carwashAPI.models.BookingStatus;
 import ru.pin120.carwashAPI.models.Cleaner;
 import ru.pin120.carwashAPI.services.BookingService;
 import ru.pin120.carwashAPI.services.ValidateInputService;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.IllegalFormatException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -40,6 +43,56 @@ public class BookingController {
         try{
             List<Booking> bookings = bookingService.getBoxBookings(startInterval, endInterval, boxId);
             return new ResponseEntity<>(bookings, HttpStatus.OK);
+        }catch (Exception e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping
+    public ResponseEntity<?> get(@RequestParam(value = "cleanerId", required = false) Long cleanerId,
+                                               @RequestParam(value = "clientId",required = false) Long clientId,
+                                               @RequestParam(value = "boxId",required = false) Long boxId,
+                                               @RequestParam(value = "pageIndex") Integer pageIndex,
+                                               @RequestParam(value = "startInterval",required = false)LocalDateTime startInterval,
+                                               @RequestParam(value = "endInterval",required = false) LocalDateTime endInterval,
+                                               @RequestParam(value = "status",required = false) BookingStatus bookingStatus,
+                                               @RequestParam(value = "operator",required = false) String compareOperator,
+                                               @RequestParam(value = "price",required = false) Integer price)
+    {
+        try{
+            List<Booking> bookings = bookingService.getClientBookings(pageIndex, cleanerId,clientId, boxId, startInterval, endInterval, bookingStatus, compareOperator, price);
+            return new ResponseEntity<>(bookings, HttpStatus.OK);
+        }catch (Exception e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/getInfo")
+    public ResponseEntity<?> getInfo(@RequestParam(value = "cleanerId", required = false) Long cleanerId,
+                                    @RequestParam(value = "clientId",required = false) Long clientId,
+                                    @RequestParam(value = "boxId",required = false) Long boxId,
+                                    @RequestParam(value = "startInterval",required = false)LocalDateTime startInterval,
+                                    @RequestParam(value = "endInterval",required = false) LocalDateTime endInterval,
+                                    @RequestParam(value = "status",required = false) BookingStatus bookingStatus,
+                                    @RequestParam(value = "operator",required = false) String compareOperator,
+                                    @RequestParam(value = "price",required = false) Integer price)
+    {
+        try{
+            BookingsInfoDTO bookingsInfoDTO = bookingService.getBookingsInfo(cleanerId, clientId, boxId, startInterval, endInterval, bookingStatus, compareOperator, price);
+            return new ResponseEntity<>(bookingsInfoDTO, HttpStatus.OK);
+        }catch (Exception e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/getInfoAboutWorkOfCleaner")
+    public ResponseEntity<?> getInfoAboutWorkOfCleaner(@RequestParam(value = "cleanerId") Long cleanerId,
+                                                       @RequestParam(value = "startInterval",required = false)LocalDateTime startInterval,
+                                                       @RequestParam(value = "endInterval",required = false) LocalDateTime endInterval)
+    {
+        try{
+            Map<LocalDate, BookingsInfoDTO> info = bookingService.infoAboutWorkOfCleaner(cleanerId,startInterval,endInterval);
+            return new ResponseEntity<>(info, HttpStatus.OK);
         }catch (Exception e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
