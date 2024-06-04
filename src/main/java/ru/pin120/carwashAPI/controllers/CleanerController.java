@@ -41,8 +41,7 @@ public class CleanerController {
             @RequestParam(value = "name",required = false) String name,
             @RequestParam(value = "patronymic",required = false) String patronymic,
             @RequestParam(value = "phone",required = false) String phone,
-            @RequestParam(value = "status",required = false) CleanerStatus status,
-            @RequestParam(value = "boxNumber",required = false) Long boxNumber)
+            @RequestParam(value = "status",required = false) CleanerStatus status)
     {
 
         try{
