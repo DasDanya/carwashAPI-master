@@ -1,5 +1,6 @@
 package ru.pin120.carwashAPI.services;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -7,6 +8,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.pin120.carwashAPI.Exceptions.UserExistsException;
 import ru.pin120.carwashAPI.dtos.UserDTO;
 import ru.pin120.carwashAPI.models.User;
@@ -26,6 +28,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -48,9 +51,6 @@ public class UserService {
     public JwtResponse create(RegisterRequest registerRequest) throws NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
         User user = new User();
         user.setUsName(aes.decrypt(registerRequest.getUsername()));
-        user.setUsRole(UserRole.valueOf(registerRequest.getRole()));
-        user.setUsName(registerRequest.getUsername());
-        user.setUsPassword(encoder.encode(registerRequest.getPassword()));
         Optional<User> existsUser = userRepository.findByUsName(user.getUsName());
         if(existsUser.isPresent()){
             throw new UserExistsException(String.format("Имя %s уже занято",user.getUsName()));
@@ -103,5 +103,59 @@ public class UserService {
         jwtToken = aes.encrypt(jwtToken);
 
         return new JwtResponse(jwtToken, toDTO(userDetails.getUser()));
+    }
+
+    public Optional<User> getByUsName(String usName) {
+        return userRepository.findByUsName(usName);
+    }
+
+    @Transactional
+    public void delete(User user) {
+        if(user.getUsRole() == UserRole.OWNER){
+            throw new IllegalArgumentException("Нельзя удалить пользователя с ролью Владелец");
+        }else{
+            userRepository.delete(user);
+        }
+    }
+
+    public JwtResponse editPassword(User user, String password, String authorizationHeader) throws NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
+        String jwtToken = jwtUtils.getJwtToken(authorizationHeader);
+        if(jwtToken != null){
+            Optional<User> userOptional = userRepository.findByUsName(jwtUtils.getUsernameFromJwtToken(jwtToken));
+            if(userOptional.isEmpty()){
+                throw new EntityNotFoundException("Пользователь, выполняющий операцию, не найден");
+            }else{
+                User operateUser = userOptional.get();
+                String newPassword = aes.decrypt(password);
+                if(operateUser.getUsRole() == UserRole.OWNER){
+                    if(user.getUsRole() == UserRole.OWNER) {
+                        if (!Objects.equals(user.getUsId(), operateUser.getUsId())) {
+                            throw new IllegalArgumentException("Нельзя менять пароль другому владельцу");
+                        }
+                        user.setUsPassword(encoder.encode(newPassword));
+                    }else{
+                        user.setUsPassword(encoder.encode(newPassword));
+                    }
+                }else{
+                    throw new IllegalArgumentException("Пользователь не имеет права менять пароль");
+                }
+
+                userRepository.save(user);
+
+                if(Objects.equals(user.getUsId(), operateUser.getUsId())) {
+                    Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsName(), newPassword));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
+
+                //UserDetailsImpl userDetails = UserDetailsImpl.build(user);
+                //String jwtTokenUser = jwtUtils.generateJwtToken(userDetails);
+                //jwtTokenUser = aes.encrypt(jwtTokenUser);
+                jwtToken = aes.encrypt(jwtToken);
+                return new JwtResponse(jwtToken, toDTO(user));
+            }
+
+        }else{
+            throw new IllegalArgumentException("Отсутствует jwt токен");
+        }
     }
 }

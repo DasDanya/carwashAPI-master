@@ -74,6 +74,17 @@ public class ServiceController {
         return new ResponseEntity<>(serviceDTO, HttpStatus.OK);
     }
 
+    @GetMapping("/get/{servName}")
+    public ResponseEntity<Service> getService(@PathVariable("servName") String servName){
+        try{
+            Optional<Service> serviceOptional = servService.getByServName(servName);
+            return serviceOptional.map(service -> new ResponseEntity<>(service, HttpStatus.OK)).orElseGet(() -> new ResponseEntity<>(null, HttpStatus.NOT_FOUND));
+
+        }catch (Exception e){
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     @PostMapping("/create")
     public ResponseEntity<?> createService(@RequestBody @Valid ServiceDTO serviceDTO, BindingResult bindingResult){
         Service service = null;
@@ -95,16 +106,6 @@ public class ServiceController {
         return new ResponseEntity<>(service, HttpStatus.OK);
     }
 
-    @GetMapping("/get/{servName}")
-    public ResponseEntity<Service> getService(@PathVariable("servName") String servName){
-        try{
-            Optional<Service> serviceOptional = servService.getByServName(servName);
-            return serviceOptional.map(service -> new ResponseEntity<>(service, HttpStatus.OK)).orElseGet(() -> new ResponseEntity<>(null, HttpStatus.NOT_FOUND));
-
-        }catch (Exception e){
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
 
     @PutMapping("/necessaryCategoriesOfSupplies/{servName}")
     public ResponseEntity<?> editCategoriesOfSupplies(@PathVariable("servName") String servName,@RequestBody Service service){

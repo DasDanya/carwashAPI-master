@@ -48,7 +48,6 @@ public class CategoryOfTransportController {
             if(trId == null) {
                 categoryOfTransports = categoryOfTransportService.getAvailableCategoriesByMarkAndModel(mark, model);
             }else{
-                System.out.println("TRRRRRIDDDDDDDDDDD");
                 categoryOfTransports = categoryOfTransportService.getAvailableCategoriesByMarkAndModel(mark, model,trId);
             }
         }catch (Exception e){

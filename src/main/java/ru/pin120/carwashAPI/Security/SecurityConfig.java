@@ -72,14 +72,43 @@ public class SecurityConfig {
                     return corsConfiguration;
                 }))
                 .authorizeHttpRequests(auth->
-                        auth.requestMatchers("/api/users/**").permitAll()
-                                .requestMatchers("/api/boxes/**").hasAnyAuthority(UserRole.ADMINISTRATOR.name(), UserRole.OWNER.name())
-                                .requestMatchers("/api/typeProducts/add/**", "/api/typeProducts/update/**", "/api/typeProducts/delete/**").hasAnyAuthority("ADMINISTRATOR")
-                                .requestMatchers("/api/products/add/**", "/api/products/update/**", "/api/products/delete/**").hasAnyAuthority("CUSTOMER")
-                                .requestMatchers("/api/printingHouses/**").hasAnyAuthority("ADMINISTRATOR")
-                                .requestMatchers("/api/materials/add/**", "/api/materials/update/**", "/api/materials/delete/**").hasAnyAuthority("ADMINISTRATOR")
-                                .requestMatchers("/api/employees/**").permitAll()
-                                .requestMatchers("/api/bookings/add/**", "/api/bookings/delete/**").hasAnyAuthority("CUSTOMER")
+                        auth.requestMatchers("/api/users/register","api/users/login").permitAll()
+                                .requestMatchers("/api/users", "/api/users/delete/**", "/api/users/editPassword/**").hasAuthority(UserRole.OWNER.name())
+
+                                .requestMatchers("/api/boxes", "/api/boxes/available", "/api/boxes/edit/**").hasAnyAuthority(UserRole.ADMINISTRATOR.name(), UserRole.OWNER.name())
+                                .requestMatchers("/api/boxes/create/**", "/api/boxes/delete/**").hasAuthority(UserRole.OWNER.name())
+
+                                .requestMatchers("/api/bookings/boxBookings/**", "/api/bookings", "/api/bookings/getInfo/**", "/api/bookings/getInfoAboutWorkOfCleaner/**", "/api/bookings/create/**", "/api/bookings/newStatus/**", "/api/bookings/edit/**").hasAnyAuthority(UserRole.ADMINISTRATOR.name(), UserRole.OWNER.name())
+                                .requestMatchers( "/api/bookings/delete/**").hasAuthority(UserRole.OWNER.name())
+
+                                .requestMatchers("/api/categoriesOfSupplies").hasAnyAuthority(UserRole.ADMINISTRATOR.name(), UserRole.OWNER.name())
+                                .requestMatchers("/api/categoriesOfSupplies/create/**", "/api/categoriesOfSupplies/delete/**").hasAuthority(UserRole.OWNER.name())
+
+                                .requestMatchers("/api/categoryOfServices", "/api/categoryOfServices/getAllCatNames", "/api/categoryOfServices/getCatNamesByParameter/**", "/api/categoryOfServices/getCategoriesWithServices").hasAnyAuthority(UserRole.ADMINISTRATOR.name(), UserRole.OWNER.name())
+                                .requestMatchers("/api/categoryOfServices/create/**", "/api/categoryOfServices/edit/**", "/api/categoryOfServices/delete/**").hasAuthority(UserRole.OWNER.name())
+
+                                .requestMatchers("/api/categoriesOfTransport", "/api/categoriesOfTransport/availableCategories", "/api/categoriesOfTransport/","/api/emptyCategoryTransport/**").hasAnyAuthority(UserRole.ADMINISTRATOR.name(), UserRole.OWNER.name())
+                                .requestMatchers("/api/categoriesOfTransport/create/**", "/api/categoriesOfTransport/edit/**", "/api/categoriesOfTransport/delete/**").hasAuthority(UserRole.OWNER.name())
+
+                                .requestMatchers("/api/cleaners/**").hasAnyAuthority(UserRole.ADMINISTRATOR.name(), UserRole.OWNER.name())
+
+                                .requestMatchers("/api/clients/**").hasAnyAuthority(UserRole.ADMINISTRATOR.name(), UserRole.OWNER.name())
+
+                                .requestMatchers("/api/clientsTransport/**").hasAnyAuthority(UserRole.ADMINISTRATOR.name(), UserRole.OWNER.name())
+
+                                .requestMatchers("/api/priceList/", "/api/priceList/getPriceListOfCategoryTransport", "/api/priceList").hasAnyAuthority(UserRole.ADMINISTRATOR.name(), UserRole.OWNER.name())
+                                .requestMatchers("/api/priceList/create/**", "/api/priceList/edit/**", "/api/priceList/delete/**").hasAuthority(UserRole.OWNER.name())
+
+                                .requestMatchers("/api/services/", "/api/services/getByServName/**","/api/services/get/**", "/api/services").hasAnyAuthority(UserRole.ADMINISTRATOR.name(), UserRole.OWNER.name())
+                                .requestMatchers("/api/services/create/**", "/api/services/necessaryCategoriesOfSupplies/**", "/api/services/bindServicesToCategory/**", "/api/services/bindServiceToCategory/**", "/api/services/delete/**").hasAuthority(UserRole.OWNER.name())
+
+                                .requestMatchers("/api/suppliesInBox/**").hasAnyAuthority(UserRole.ADMINISTRATOR.name(), UserRole.OWNER.name())
+
+                                .requestMatchers("/api/supplies/**").hasAnyAuthority(UserRole.ADMINISTRATOR.name(), UserRole.OWNER.name())
+
+                                .requestMatchers("/api/transport/**").hasAnyAuthority(UserRole.ADMINISTRATOR.name(), UserRole.OWNER.name())
+
+                                .requestMatchers("/api/workSchedule/**").hasAnyAuthority(UserRole.ADMINISTRATOR.name(), UserRole.OWNER.name())
                                 .anyRequest()
                                 .authenticated());
 

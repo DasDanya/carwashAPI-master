@@ -74,4 +74,11 @@ public class JwtUtils {
         return false;
     }
 
+    public String getJwtToken(String authorizationHeader){
+        if (authorizationHeader!= null && authorizationHeader.startsWith("Bearer ")) {
+             return authorizationHeader.substring(7);
+        }
+        return null;
+    }
+
 }
