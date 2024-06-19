@@ -21,6 +21,9 @@ import ru.pin120.carwashAPI.services.UserDetailsServiceImpl;
 
 import java.util.List;
 
+/**
+ * Класс SecurityConfig конфигурирует параметры безопасности для приложения
+ */
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
@@ -28,16 +31,32 @@ public class SecurityConfig {
     private final AuthEntryPointJwt unauthorizedHandler;
     private final UserDetailsServiceImpl userDetailsServiceImpl;
 
+    /**
+     * Внедрение зависимостей
+     *
+     * @param unauthorizedHandler обработчик несанкционированного доступа
+     * @param userDetailsServiceImpl сервис деталей пользователя
+     */
     public SecurityConfig(AuthEntryPointJwt unauthorizedHandler, UserDetailsServiceImpl userDetailsServiceImpl) {
         this.unauthorizedHandler = unauthorizedHandler;
         this.userDetailsServiceImpl = userDetailsServiceImpl;
     }
 
+    /**
+     * Создает фильтр для аутентификации JWT токенов
+     *
+     * @return экземпляр AuthTokenFilter
+     */
     @Bean
     public AuthTokenFilter authenticationJwtTokenFilter() {
         return new AuthTokenFilter();
     }
 
+    /**
+     * Создает и конфигурирует провайдер аутентификации DAO
+     *
+     * @return экземпляр DaoAuthenticationProvider
+     */
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -48,16 +67,35 @@ public class SecurityConfig {
         return authProvider;
     }
 
+    /**
+     * Создает менеджер аутентификации
+     *
+     * @param authConfig конфигурация аутентификации
+     * @return экземпляр AuthenticationManager
+     * @throws Exception в случае ошибки создания менеджера аутентификации
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
 
+    /**
+     * Создает и конфигурирует кодировщик паролей
+     *
+     * @return экземпляр PasswordEncoder
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Конфигурирует цепочку фильтров безопасности
+     *
+     * @param http объект HttpSecurity для конфигурации
+     * @return настроенная цепочка фильтров безопасности
+     * @throws Exception в случае ошибки конфигурации цепочки фильтров
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
         http.csrf(AbstractHttpConfigurer::disable)

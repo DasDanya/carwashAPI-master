@@ -15,13 +15,32 @@ import ru.pin120.carwashAPI.services.UserDetailsServiceImpl;
 
 import java.io.IOException;
 
+/**
+ * Класс AuthTokenFilter расширяет OncePerRequestFilter для проверки JWT токена в каждом запросе
+ * Он аутентифицирует пользователя на основе токена и устанавливает аутентификационные данные в контексте безопасности
+ */
 public class AuthTokenFilter extends OncePerRequestFilter {
+    /**
+     * Экземпляр класса для работы с JWT
+     */
     @Autowired
     private JwtUtils jwtUtils;
 
+    /**
+     * Данные о пользователе
+     */
     @Autowired
     private UserDetailsServiceImpl userDetailsServiceImpl;
 
+    /**
+     * Метод, который фильтрует каждый запрос для проверки наличия и валидности JWT
+     *
+     * @param request объект HttpServletRequest, содержащий запрос клиента
+     * @param response объект HttpServletResponse, используемый для отправки ответа клиенту
+     * @param filterChain объект FilterChain для продолжения цепочки фильтров
+     * @throws ServletException если произошла ошибка сервлета
+     * @throws IOException если произошла ошибка ввода-вывода
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String jwt =parseJwt(request);
@@ -41,6 +60,12 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         filterChain.doFilter(request,response);
     }
 
+    /**
+     * Метод для извлечения JWT из заголовка авторизации запроса
+     *
+     * @param request объект HttpServletRequest, содержащий запрос клиента
+     * @return строка JWT или null, если токен отсутствует или не соответствует формату
+     */
     private String parseJwt(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");
 
