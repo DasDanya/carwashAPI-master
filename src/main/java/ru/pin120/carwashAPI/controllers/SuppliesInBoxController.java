@@ -16,19 +16,46 @@ import ru.pin120.carwashAPI.services.ValidateInputService;
 import java.util.List;
 import java.util.Optional;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
+
+/**
+ * REST контроллер, обрабатывающий HTTP-запросы для работы с данными о расходных материалах в боксе
+ */
+//@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/suppliesInBox")
 public class SuppliesInBoxController {
 
+    /**
+     * Сервис для валидации входных данных
+     */
     private final ValidateInputService validateInputService;
+
+    /**
+     * Сервис для работы с расходными материалами в боксе
+     */
     private final SuppliesInBoxService suppliesInBoxService;
 
+
+    /**
+     * Конструктор для внедрения зависимостей
+     * @param validateInputService сервис для валидации входных данных
+     * @param suppliesInBoxService сервис для работы с расходными материалами в боксе
+     */
     public SuppliesInBoxController(ValidateInputService validateInputService, SuppliesInBoxService suppliesInBoxService) {
         this.validateInputService = validateInputService;
         this.suppliesInBoxService = suppliesInBoxService;
     }
 
+    /**
+     * Метод, обрабатывающий GET запрос на получение списка расходных материалов в боксе с учётом пагинации
+     * @param boxId id бокса
+     * @param pageIndex индекс страницы
+     * @param supName навзание расходного материала
+     * @param supCategory категория расходного материала
+     * @param operator оператор сравнения количества расходного материала
+     * @param supCount количество расходного материала
+     * @return ResponseEntity со списком расходных материалов в боксе и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом 500
+     */
     @GetMapping("/byBox")
     public ResponseEntity<?> getByBox(@RequestParam(value = "boxId") Long boxId,
                                       @RequestParam(value = "pageIndex") int pageIndex,
@@ -44,7 +71,12 @@ public class SuppliesInBoxController {
         }
     }
 
-
+    /**
+     * Метод, обрабатывающий POST запрос на добавление расходного материала в бокс
+     * @param suppliesInBox расходный материал в боксе
+     * @param bindingResult экземпляр интерфейса для обработки результатов валидации данных
+     * @return ResponseEntity с добавленным расходным материалом в боксе и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом
+     */
     @PostMapping("/add")
     public ResponseEntity<?> add(@RequestBody @Valid SuppliesInBox suppliesInBox, BindingResult bindingResult){
         try{
@@ -61,6 +93,11 @@ public class SuppliesInBoxController {
         }
     }
 
+    /**
+     * Метод, обрабатывающий DELETE запрос на удаление расходного материала из бокса
+     * @param id id расходного материала в боксе
+     * @return ResponseEntity с сообщением и статус-кодом
+     */
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> delete(@PathVariable("id") Long id){
         try{
@@ -77,6 +114,13 @@ public class SuppliesInBoxController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Метод, обрабатывающий PUT запрос на перенос расходного материала на склад
+     * @param id id расходного материала в боксе
+     * @param addSuppliesFromBoxDTO DTO для переноса расходного материала на склад
+     * @param bindingResult экземпляр интерфейса для обработки результатов валидации данных
+     * @return ResponseEntity с измененным расходным материалом в боксе и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом
+     */
     @PutMapping("/transferToWarehouse/{id}")
     public ResponseEntity<?> transferToWarehouse(@PathVariable("id") Long id, @RequestBody @Valid AddSuppliesFromBoxDTO addSuppliesFromBoxDTO, BindingResult bindingResult){
         try{
@@ -100,6 +144,13 @@ public class SuppliesInBoxController {
         }
     }
 
+    /**
+     * Метод, обрабатывающий PUT запрос на изменение данных о расходном материале в боксе
+     * @param id id расходного материала в боксе
+     * @param suppliesInBox расходный материал в боксе с новыми данными
+     * @param bindingResult экземпляр интерфейса для обработки результатов валидации данных
+     * @return ResponseEntity с измененным расходным материалом в боксе и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом
+     */
     @PutMapping("/edit/{id}")
     public ResponseEntity<?> edit(@PathVariable("id") Long id, @RequestBody @Valid SuppliesInBox suppliesInBox, BindingResult bindingResult){
         try{
@@ -115,7 +166,7 @@ public class SuppliesInBoxController {
                 return new ResponseEntity<>(validateInputService.getErrors(bindingResult), HttpStatus.BAD_REQUEST);
             }
             if(suppliesInBoxService.existsOther(suppliesInBox)){
-                return new ResponseEntity<>(String.format("В базе данных уже существует запись об автомоечном средстве с id = %d в боксе %d", suppliesInBox.getSupply().getSupId(), suppliesInBox.getBox().getBoxId()), HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>(String.format("В базе данных уже существует запись о расходном материале с id = %d в боксе %d", suppliesInBox.getSupply().getSupId(), suppliesInBox.getBox().getBoxId()), HttpStatus.BAD_REQUEST);
             }
 
             suppliesInBoxService.edit(suppliesInBox, existedsuppliesInBox);

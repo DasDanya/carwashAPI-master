@@ -15,20 +15,44 @@ import ru.pin120.carwashAPI.services.WorkScheduleService;
 import java.time.LocalDate;
 import java.util.List;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
+
+/**
+ * REST контроллер, обрабатывающий HTTP-запросы для работы с данными о рабочих днях мойщиков
+ */
+//@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/workSchedule")
 public class WorkScheduleController {
 
+    /**
+     * Сервис для работы с рабочими днями мойщиков
+     */
     private final WorkScheduleService workScheduleService;
+
+    /**
+     * Сервис для валидации входных данных
+     */
     private final ValidateInputService validateInputService;
 
+    /**
+     * Конструктор для внедрения зависимостей
+     * @param workScheduleService сервис для работы с рабочими днями мойщиков
+     * @param validateInputService сервис для валидации входных данных
+     */
     public WorkScheduleController(WorkScheduleService workScheduleService, ValidateInputService validateInputService) {
         this.workScheduleService = workScheduleService;
         this.validateInputService = validateInputService;
     }
 
 
+    /**
+     * Метод, обрабатывающий GET запрос на получение списка рабочих дней мойщика
+     * @param startInterval начало временного интервала
+     * @param endInterval конец временного интервала
+     * @param clrId id мойщика
+     * @param pageIndex индекс страницы
+     * @return ResponseEntity со списком рабочих дней мойщика и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом 500
+     */
     @GetMapping
     public ResponseEntity<List<WorkSchedule>> get(@RequestParam(value = "startInterval") LocalDate startInterval,
                                                   @RequestParam(value = "endInterval") LocalDate endInterval,
@@ -43,7 +67,12 @@ public class WorkScheduleController {
         }
     }
 
-
+    /**
+     * Метод, обрабатывающий POST запрос на добавление рабочего дня
+     * @param cleanerDTOS список мойщиков с их рабочими днями
+     * @param bindingResult экземпляр интерфейса для обработки результатов валидации данных
+     * @return ResponseEntity с добавленными рабочими днями и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом
+     */
     @PostMapping("/create")
     public ResponseEntity<?> create(@RequestBody @Valid List<CleanerDTO> cleanerDTOS, BindingResult bindingResult){
         try{
@@ -65,6 +94,11 @@ public class WorkScheduleController {
         }
     }
 
+    /**
+     * Метод, обрабатывающий DELETE запрос на удаление рабочих дней
+     * @param workSchedules список удаляемых рабочих дней
+     * @return ResponseEntity с сообщением и статус-кодом
+     */
     @DeleteMapping("/delete")
     public ResponseEntity<?> delete(@RequestBody List<WorkSchedule> workSchedules){
         try{

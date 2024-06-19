@@ -22,23 +22,51 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Сервис рабочих дней
+ */
 @Service
 public class WorkScheduleService {
 
+    /**
+     * Репозиторий рабочих дней
+     */
     private final WorkScheduleRepository workScheduleRepository;
+
+    /**
+     * Репозиторий мойщиков
+     */
     private final CleanerRepository cleanerRepository;
 
-    private final int COUNT_ITEMS_IN_PAGE = 30;
+    private final int COUNT_ITEMS_IN_PAGE = 31;
 
+    /**
+     * Внедрение зависимостей
+     * @param workScheduleRepository репозиторий рабочих дней
+     * @param cleanerRepository репозиторий мойщиков
+     */
     public WorkScheduleService(WorkScheduleRepository workScheduleRepository, CleanerRepository cleanerRepository) {
         this.workScheduleRepository = workScheduleRepository;
         this.cleanerRepository = cleanerRepository;
     }
 
+    /**
+     * Удаление рабочих дней мойщика после определенного для
+     * @param clrId id мойщика
+     * @param start день, с которого начинается удаление
+     */
     public void deleteByClrIdAndStartDate(Long clrId, LocalDate start){
         workScheduleRepository.deleteByCleanerIdAndWsWorkDayAfterOrEqual(clrId, start);
     }
 
+    /**
+     * Получение рабочих дней
+     * @param startInterval начало временного интервала
+     * @param endInterval конец временного интервала
+     * @param clrId id мойщика
+     * @param pageIndex индекс страницы
+     * @return Список рабочих дней
+     */
     public List<WorkSchedule> get(LocalDate startInterval, LocalDate endInterval, Long clrId, Integer pageIndex){
         if(pageIndex != null) {
             Pageable pageable = PageRequest.of(pageIndex, COUNT_ITEMS_IN_PAGE, Sort.by("wsWorkDay"));
@@ -48,6 +76,11 @@ public class WorkScheduleService {
         }
     }
 
+    /**
+     * Преобразование WorkSchedule в DTO
+     * @param workSchedule рабочий день
+     * @return DTO
+     */
     public static WorkScheduleDTO toDTO(WorkSchedule workSchedule){
         return new WorkScheduleDTO(
                 workSchedule.getWsId(),
@@ -55,6 +88,11 @@ public class WorkScheduleService {
         );
     }
 
+    /**
+     * Создание рабочего дня
+     * @param cleanerDTOS список мойщиков с их рабочими днями
+     * @return Результат создания рабочих дней
+     */
     public ResultCreateWorkSchedulesDTO create(List<CleanerDTO> cleanerDTOS) {
         List<WorkSchedule> createdWorkScheduleItems = new ArrayList<>();
         String conflictMessage = "";
@@ -102,6 +140,10 @@ public class WorkScheduleService {
         return new ResultCreateWorkSchedulesDTO(conflictMessage, createdWorkScheduleItems);
     }
 
+    /**
+     * Удаление рабочих дней
+     * @param workSchedules список рабочих дней
+     */
     public void delete(List<WorkSchedule> workSchedules) {
         workScheduleRepository.deleteAll(workSchedules);
     }

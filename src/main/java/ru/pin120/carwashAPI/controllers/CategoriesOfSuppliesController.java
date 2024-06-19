@@ -15,21 +15,43 @@ import ru.pin120.carwashAPI.services.ValidateInputService;
 import java.util.List;
 import java.util.Optional;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
+
+/**
+ * REST контроллер, обрабатывающий HTTP-запросы для работы с данными о категориях расходных материалов
+ */
+//@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/categoriesOfSupplies")
 public class CategoriesOfSuppliesController {
 
+    /**
+     * Сервис для работы с категориями расходных материалов
+     */
     private final CategoriesOfSuppliesService categoriesOfSuppliesService;
+
+    /**
+     * Сервис для валидации входных данных
+     */
     private final ValidateInputService validateInputService;
 
+
+    /**
+     * Конструктор для внедрения зависимостей
+     * @param categoriesOfSuppliesService сервис для работы с категориями расходных материалов
+     * @param validateInputService сервис для валидации входных данных
+     */
     public CategoriesOfSuppliesController(CategoriesOfSuppliesService categoriesOfSuppliesService, ValidateInputService validateInputService) {
         this.categoriesOfSuppliesService = categoriesOfSuppliesService;
         this.validateInputService = validateInputService;
     }
 
+    /**
+     * Метод, обрабатывающий GET запрос на получение списка категорий расходных материалов
+     * @param csupName название категории
+     * @return ResponseEntity со списком категорий и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом 500
+     */
     @GetMapping
-    public ResponseEntity<List<CategoryOfSupplies>> get(@RequestParam(value = "csupName", required = false) String csupName){
+    public ResponseEntity<?> get(@RequestParam(value = "csupName", required = false) String csupName){
         try{
             List<CategoryOfSupplies> categories;
             if(csupName == null) {
@@ -39,10 +61,16 @@ public class CategoriesOfSuppliesController {
             }
             return new ResponseEntity<>(categories, HttpStatus.OK);
         }catch (Exception e){
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
+    /**
+     * Метод, обрабатывающий POST запрос на добавление категории расходных материалов
+     * @param categoryOfSupplies категория расходных материалов
+     * @param bindingResult экземпляр интерфейса для обработки результатов валидации данных
+     * @return ResponseEntity с добавленной категорией и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом
+     */
     @PostMapping("/create")
     public ResponseEntity<?> create(@RequestBody @Valid CategoryOfSupplies categoryOfSupplies, BindingResult bindingResult){
         try{
@@ -62,6 +90,11 @@ public class CategoriesOfSuppliesController {
         return new ResponseEntity<>(categoryOfSupplies, HttpStatus.OK);
     }
 
+    /**
+     * Метод, обрабатывающий DELETE запрос на удаление категории расходных материалов
+     * @param cSupName название категории
+     * @return ResponseEntity с сообщением и статус-кодом
+     */
     @DeleteMapping("/delete/{cSupName}")
     public ResponseEntity<String> deleteService(@PathVariable("cSupName") String cSupName){
         try{
@@ -74,7 +107,7 @@ public class CategoriesOfSuppliesController {
             CategoryOfSupplies categoryOfSupplies = categoryOfSuppliesOptional.get();
 
             if(!categoryOfSupplies.getSupplies().isEmpty()){
-                return new ResponseEntity<>(String.format("Нельзя удалить категорию %s, так как она указана в автомоечном средстве", categoryOfSupplies.getCSupName()), HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>(String.format("Нельзя удалить категорию %s, так как она указана в расходном материале", categoryOfSupplies.getCSupName()), HttpStatus.BAD_REQUEST);
             }else{
                 categoriesOfSuppliesService.delete(categoryOfSupplies);
             }

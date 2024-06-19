@@ -12,6 +12,9 @@ import lombok.Setter;
 
 import java.util.List;
 
+/**
+ * Модель категории услуг
+ */
 @Entity
 @Getter
 @Setter
@@ -19,6 +22,9 @@ import java.util.List;
 @Table(name = "categories_of_services")
 public class CategoryOfServices {
 
+    /**
+     * Название
+     */
     @Id
     @Column(unique = true, nullable = false, length = 30)
     @Size(max = 30, message = "Максимальная длина 30 символов")
@@ -27,6 +33,9 @@ public class CategoryOfServices {
     @Pattern(regexp = "^[a-zA-Zа-яА-ЯёЁ0-9 -]+$", message = "Допустимые символы для названия: латинские буквы, кириллица, цифры, пробелы и знаки тире")
     private String catName;
 
+    /**
+     * Список услуг
+     */
     @OneToMany(mappedBy = "category")
     @JsonManagedReference
     private List<Service> services;

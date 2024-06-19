@@ -8,10 +8,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Сервис для обработки ошибок валидации данных
+ */
 @Service
-
 public class ValidateInputService {
 
+    /**
+     * Получение ошибок валидации из объекта BindingResult и формирование текстового представления ошибок
+     *
+     * @param bindingResult объект BindingResult, содержащий результаты валидации
+     * @return текстовое представление ошибок в формате "поле -> [ошибка1, ошибка2];"
+     */
     public String getErrors(BindingResult bindingResult) {
         DefaultMessageCodesResolver resolver = new DefaultMessageCodesResolver();
         Map<String, List<String>> fieldErrors = bindingResult.getFieldErrors().stream()

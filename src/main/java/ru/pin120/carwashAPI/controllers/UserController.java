@@ -21,19 +21,38 @@ import ru.pin120.carwashAPI.services.ValidateInputService;
 import java.util.List;
 import java.util.Optional;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
+/**
+ * REST контроллер, обрабатывающий HTTP-запросы для работы с данными о пользователях
+ */
+//@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
 
+    /**
+     * Сервис для валидации входных данных
+     */
     private final ValidateInputService validateInputService;
+
+    /**
+     * Сервис для работы с пользователями
+     */
     private final UserService userService;
 
+    /**
+     * Конструктор для внедрения зависимостей
+     * @param validateInputService сервис для валидации входных данных
+     * @param userService сервис для работы с расходными материалами
+     */
     public UserController(ValidateInputService validateInputService, UserService userService) {
         this.validateInputService = validateInputService;
         this.userService = userService;
     }
 
+    /**
+     * Метод, обрабатывающий GET запрос на получение списка пользователей
+     * @return ResponseEntity со списком пользователей и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом 500
+     */
     @GetMapping
     public ResponseEntity<?> get(){
         try{
@@ -44,6 +63,12 @@ public class UserController {
         }
     }
 
+    /**
+     * Метод, обрабатывающий POST запрос на регистрацию пользователя
+     * @param registerRequest запрос на регистрацию
+     * @param bindingResult экземпляр интерфейса для обработки результатов валидации данных
+     * @return ResponseEntity с зарегистрированным пользователем вместе с JWT и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом
+     */
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody @Valid RegisterRequest registerRequest, BindingResult bindingResult){
         try {
@@ -63,6 +88,12 @@ public class UserController {
         }
     }
 
+    /**
+     * Метод, обрабатывающий POST запрос на авторизацию
+     * @param loginRequest запрос на авторизацию
+     * @param bindingResult bindingResult экземпляр интерфейса для обработки результатов валидации данных
+     * @return ResponseEntity с авторизированным пользователем вместе с JWT и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом
+     */
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody @Valid LoginRequest loginRequest, BindingResult bindingResult){
         try{
@@ -81,6 +112,11 @@ public class UserController {
         }
     }
 
+    /**
+     * Метод, обрабатывающий DELETE запрос на удаление пользователя
+     * @param userName имя пользователя
+     * @return ResponseEntity с сообщением и статус-кодом
+     */
     @DeleteMapping("/delete/{userName}")
     public ResponseEntity<?> delete(@PathVariable("userName") String userName){
         try{
@@ -102,6 +138,14 @@ public class UserController {
         }
     }
 
+    /**
+     * Метод, обрабатывающий POST запрос на изменение пароля пользователю
+     * @param authorizationHeader заголовок HTTP-запроса Authorization
+     * @param userName имя пользователя
+     * @param passwordWrapper класс-оболочка пароля пользователя
+     * @param bindingResult экземпляр интерфейса для обработки результатов валидации данных
+     * @return ResponseEntity с измененными данными о пользователе вместе с JWT и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом
+     */
     @PutMapping("/editPassword/{userName}")
     public ResponseEntity<?> editPassword(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @PathVariable("userName") String userName, @RequestBody @Valid PasswordWrapper passwordWrapper, BindingResult bindingResult){
         try{

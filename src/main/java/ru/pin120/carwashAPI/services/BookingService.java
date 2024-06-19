@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.pin120.carwashAPI.dtos.BookingDTO;
 import ru.pin120.carwashAPI.dtos.BookingsInfoDTO;
-import ru.pin120.carwashAPI.dtos.InfoAboutWorkOfCleaner;
 import ru.pin120.carwashAPI.dtos.ServiceWithPriceListDTO;
 import ru.pin120.carwashAPI.models.*;
 import ru.pin120.carwashAPI.repositories.BookingRepository;
@@ -22,24 +21,50 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Сервис заказа
+ */
 @Service
 public class BookingService {
 
+    /**
+     * Репозиторий заказа
+     */
     private final BookingRepository bookingRepository;
+    /**
+     * Сервис последовательности генерации номера заказа
+     */
     private final BookingIdSequenceService bookingIdSequenceService;
+    /**
+     * Сервис услуг
+     */
     private final ServService servService;
+    /**
+     * Сервис расходных материалов в боксе
+     */
     private final SuppliesInBoxService suppliesInBoxService;
+    /**
+     * Сервис позиций в прайс-листе
+     */
     private final PriceListService priceListService;
 
     private final LocalTime START_WORK_TIME = LocalTime.of(8,0);
     private final LocalTime END_WORK_TIME = LocalTime.of(20, 0);
     private static final double CLEANER_STAKE = 0.3;
 
-    private final int COUNT_ITEMS_IN_PAGE = 2;
+    private final int COUNT_ITEMS_IN_PAGE = 12;
 
     @PersistenceContext
     private EntityManager entityManager;
 
+    /**
+     * Внедрение зависимостей
+     * @param bookingRepository репозиторий заказа
+     * @param bookingIdSequenceService сервис последовательности генерации номера заказа
+     * @param servService сервис услуг
+     * @param suppliesInBoxService сервис расходных материалов в боксе
+     * @param priceListService сервис позиций в прайс-листе
+     */
     public BookingService(BookingRepository bookingRepository, BookingIdSequenceService bookingIdSequenceService, ServService servService, SuppliesInBoxService suppliesInBoxService, PriceListService priceListService) {
         this.bookingRepository = bookingRepository;
         this.bookingIdSequenceService = bookingIdSequenceService;
@@ -49,10 +74,22 @@ public class BookingService {
     }
 
 
+    /**
+     * Получение заказов бокса
+     * @param startInterval начало временного интервала
+     * @param endInterval конец временного интервала
+     * @param boxId id бокса
+     * @return Список заказов
+     */
     public List<Booking> getBoxBookings(LocalDateTime startInterval, LocalDateTime endInterval, Long boxId){
         return bookingRepository.getBoxBookings(startInterval, endInterval, boxId);
     }
 
+    /**
+     * Создание заказа
+     * @param booking данные о заказе
+     * @return Созданный заказ
+     */
     @Transactional
     public Booking create(@Valid BookingDTO booking) {
         LocalDate now = LocalDate.now();
@@ -99,7 +136,7 @@ public class BookingService {
         int price = 0;
 //        if(booking.getServices().isEmpty()){
 //            throw new IllegalArgumentException("Необходимо указать услуги для выполнения");
-//        }
+//        } есть проверка в сущности
         createdBooking.setServices(new ArrayList<>());
         for (ServiceWithPriceListDTO serviceDTO: booking.getServices()){
             Optional<ru.pin120.carwashAPI.models.Service> serviceOptional = servService.getByServName(serviceDTO.getServName());
@@ -128,15 +165,31 @@ public class BookingService {
         return bookingRepository.getCrossedBookings(startInterval, endInterval, boxId, Arrays.asList(BookingStatus.BOOKED, BookingStatus.IN_PROGRESS, BookingStatus.DONE, BookingStatus.NOT_DONE));
     }
 
+    /**
+     * Расчёт стоимости заказа с учётом скидки клиента
+     * @param price стоимость без учёта скидки
+     * @param discount скидка
+     * @return Стоимость с учётом скидки
+     */
     public int calculatePrice(int price, int discount){
         double discountedPrice = price * (1 - (discount / 100.0));
         return (int) Math.floor(discountedPrice);
     }
 
+    /**
+     * Получение заказа по id
+     * @param bkId id заказа
+     * @return Объект Optional с заказом, если он существует
+     */
     public Optional<Booking> getByBkId(String bkId){
         return bookingRepository.findById(bkId);
     }
 
+    /**
+     * Смена статуса заказа
+     * @param bookingDTO новые данные о заказе
+     * @param existedBooking заказ, у которого сменяется статус
+     */
     @Transactional
     public void newStatus(BookingDTO bookingDTO, Booking existedBooking) {
         switch (bookingDTO.getBkStatus()){
@@ -174,6 +227,8 @@ public class BookingService {
 
                     if(workSchedule == null){
                         throw new IllegalArgumentException(String.format("Невозможно начать выполнение заказа, так как в боксе №%d отсутствует мойщик", existedBooking.getBox().getBoxId()));
+                    }else{
+                        existedBooking.setCleaner(workSchedule.getCleaner());
                     }
 
                     CategoryOfTransport categoryOfTransport = existedBooking.getClientTransport().getTransport().getCategoryOfTransport();
@@ -185,7 +240,7 @@ public class BookingService {
                         for (CategoryOfSupplies category : categoriesOfSupplies) {
                             List<SuppliesInBox> suppliesInBox = suppliesInBoxService.getListExistingSuppliesCertainCategory(existedBooking.getBox().getBoxId(), category.getCSupName());
                             if (suppliesInBox.isEmpty()) {
-                                throw new IllegalArgumentException("В боксе отсутствует автомоечное средство категории " + category.getCSupName());
+                                throw new IllegalArgumentException("В боксе отсутствует расходный материал категории " + category.getCSupName());
                             }
                         }
                     }
@@ -242,11 +297,20 @@ public class BookingService {
 
     }
 
+    /**
+     * Удаление заказа
+     * @param existedBooking заказ
+     */
     @Transactional
     public void delete(Booking existedBooking) {
         bookingRepository.delete(existedBooking);
     }
 
+    /**
+     * Изменение данных о заказе
+     * @param existedBooking изменяемый заказ
+     * @param booking новые данные о заказе
+     */
     @Transactional
     public void edit(Booking existedBooking, BookingDTO booking) {
         if(!booking.getBkStartTime().isBefore(booking.getBkEndTime())){
@@ -305,6 +369,18 @@ public class BookingService {
 
     }
 
+    /**
+     * Создание запроса на получение заказов
+     * @param cleanerId id мойщика
+     * @param clientId id клиента
+     * @param boxId id бокса
+     * @param startInterval начало временного интервала
+     * @param endInterval конец временного интервала
+     * @param bookingStatus статус
+     * @param compareOperator оператор сравнения стоимости
+     * @param price стоимость
+     * @return Запрос на получение заказов
+     */
     private TypedQuery<Booking> createQuery(Long cleanerId, Long clientId, Long boxId, LocalDateTime startInterval, LocalDateTime endInterval, BookingStatus bookingStatus, String compareOperator, Integer price){
         Map<String, Object> parameters = new HashMap<>();
         String baseQuery = "SELECT b FROM Booking b ";
@@ -377,6 +453,19 @@ public class BookingService {
         return query;
     }
 
+    /**
+     * Получение списка заказов клиента
+     * @param pageIndex индекс страницы
+     * @param cleanerId id мойщика
+     * @param clientId id клиента
+     * @param boxId id бокса
+     * @param startInterval начало временного интервала
+     * @param endInterval конец временного интервала
+     * @param bookingStatus статус
+     * @param compareOperator оператор сравнения стоимости
+     * @param price стоимость
+     * @return Список заказов
+     */
     public List<Booking> getClientBookings(Integer pageIndex, Long cleanerId, Long clientId, Long boxId, LocalDateTime startInterval, LocalDateTime endInterval, BookingStatus bookingStatus, String compareOperator, Integer price) {
 
         Pageable pageable = PageRequest.of(pageIndex, COUNT_ITEMS_IN_PAGE);
@@ -388,6 +477,18 @@ public class BookingService {
 
     }
 
+    /**
+     * Получение информации о количестве и стоимости заказов
+     * @param cleanerId id мойщика
+     * @param clientId id клиента
+     * @param boxId id бокса
+     * @param startInterval начало временного интервала
+     * @param endInterval конец временного интервала
+     * @param bookingStatus статус
+     * @param compareOperator оператор сравнения стоимости
+     * @param price стоимость
+     * @return Информация о количестве и стоимости заказов
+     */
     public BookingsInfoDTO getBookingsInfo(Long cleanerId, Long clientId, Long boxId, LocalDateTime startInterval, LocalDateTime endInterval, BookingStatus bookingStatus, String compareOperator, Integer price){
         TypedQuery<Booking> query = createQuery(cleanerId, clientId, boxId, startInterval, endInterval, bookingStatus, compareOperator, price);
         List<Booking> bookings = query.getResultList();
@@ -399,6 +500,13 @@ public class BookingService {
         return new BookingsInfoDTO(bookings.size(), totalPrice);
     }
 
+    /**
+     * Получение данных о выполненных заказах мойщика
+     * @param cleanerId id мойщика
+     * @param startInterval начало временного интервала
+     * @param endInterval конец временного интервала
+     * @return Map c рабочими днями и данными о выполненных заказах
+     */
     public Map<LocalDate, BookingsInfoDTO> infoAboutWorkOfCleaner(Long cleanerId, LocalDateTime startInterval, LocalDateTime endInterval){
         Map<String, Object> parameters = new HashMap<>();
         String baseQuery = "SELECT b FROM Booking b WHERE b.cleaner.clrId = :cleanerId AND b.bkStatus = :bkStatus ";
@@ -413,6 +521,7 @@ public class BookingService {
             parameters.put("endInterval", endInterval);
         }
 
+
         TypedQuery<Booking> query = entityManager.createQuery(baseQuery, Booking.class);
         for (Map.Entry<String, Object> entry : parameters.entrySet()) {
             query.setParameter(entry.getKey(), entry.getValue());
@@ -421,13 +530,26 @@ public class BookingService {
         List<Booking> bookings = query.getResultList();
 
         return bookings.stream()
-                .collect(Collectors.groupingBy(
-                        booking -> booking.getBkStartTime().toLocalDate(),
-                        Collectors.collectingAndThen(Collectors.toList(), this::calculateSummary)
-                ));
+               .collect(Collectors.groupingBy(
+                       booking -> booking.getBkStartTime().toLocalDate(),
+                       Collectors.collectingAndThen(Collectors.toList(), this::getSummary)
+               ))
+               .entrySet().stream()
+               .sorted(Map.Entry.<LocalDate, BookingsInfoDTO>comparingByKey().reversed()) // Сортировка по ключу в обратном порядке
+               .collect(Collectors.toMap(
+                       Map.Entry::getKey,
+                       Map.Entry::getValue,
+                       (e1, e2) -> e1,
+                       LinkedHashMap::new
+               ));
     }
 
-    private BookingsInfoDTO calculateSummary(List<Booking> bookings) {
+    /**
+     * Получение данных о работе мойщика
+     * @param bookings список заказов мойщика
+     * @return Информация о работе мойщика
+     */
+    private BookingsInfoDTO getSummary(List<Booking> bookings) {
         int count = bookings.size();
         int totalCost = (int) Math.ceil(bookings.stream()
                 .mapToInt(Booking::getBkPrice)

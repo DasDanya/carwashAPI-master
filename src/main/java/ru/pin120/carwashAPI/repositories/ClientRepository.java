@@ -11,16 +11,35 @@ import ru.pin120.carwashAPI.models.Transport;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Репозиторий клиента
+ */
 @Repository
 public interface ClientRepository extends PagingAndSortingRepository<Client, Long> {
 
+    /**
+     * Сохранение клиента в базе данных
+     *
+     * @param client клиент для сохранения
+     */
     void save(Client client);
 
+    /**
+     * Поиск клиента по id
+     *
+     * @param clId id клиента для поиска
+     * @return объект Optional, содержащий найденного клиента или пустой, если клиент не найден
+     */
     Optional<Client> findByClId(Long clId);
 
+    /**
+     * Удаление клиента по id
+     *
+     * @param clId id клиента для удаления
+     */
     void deleteByClId(Long clId);
 
-    //поиск
+
     @Query("SELECT c FROM Client c WHERE LOWER(c.clSurname) LIKE LOWER(CONCAT('%', :surname, '%')) " +
             "AND LOWER(c.clName) LIKE LOWER(CONCAT('%', :name, '%')) " +
             "AND LOWER(c.clPhone) LIKE LOWER(CONCAT('%', :phone, '%')) " +

@@ -11,34 +11,74 @@ import ru.pin120.carwashAPI.repositories.ClientRepository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Сервис клиента
+ */
 @Service
 public class ClientService {
 
-    private static final int COUNT_CLIENTS_IN_PAGE = 5;
+    private static final int COUNT_CLIENTS_IN_PAGE = 12;
+
+    /**
+     * Репозиторий клиента
+     */
     private final ClientRepository clientRepository;
 
+    /**
+     * Внедрений зависимости
+     * @param clientRepository репозиторий клиента
+     */
     public ClientService(ClientRepository clientRepository) {
         this.clientRepository = clientRepository;
     }
 
+    /**
+     * Получение списка клиентов с учётом пагинации
+     * @param pageIndex индекс страницы
+     * @return Список клиентов
+     */
     public List<Client> getByPage(Integer pageIndex) {
         Pageable pageable = PageRequest.of(pageIndex, COUNT_CLIENTS_IN_PAGE, Sort.by("clSurname", "clName", "clPhone", "clDiscount"));
         return clientRepository.findAll(pageable).getContent();
     }
 
+    /**
+     * Сохранение клиента
+     * @param client клиент
+     */
     public void save(Client client) {
         clientRepository.save(client);
     }
 
+    /**
+     * Получение клиента по id
+     * @param id id клиента
+     * @return Объект Optional с клиентом, если он существует
+     */
     public Optional<Client> getById(Long id) {
         return clientRepository.findByClId(id);
     }
 
+    /**
+     * Удаление клиента по id
+     * @param clId id клиента
+     */
     @Transactional
     public void deleteById(Long clId) {
         clientRepository.deleteByClId(clId);
     }
 
+
+    /**
+     * Поиск клиентов
+     * @param pageIndex индекс страницы
+     * @param surname фамилия
+     * @param name имя
+     * @param phone номер телефона
+     * @param discount скидка
+     * @param filterDiscountOperator оператор сравнения скидки
+     * @return Список найденных клиентов
+     */
     public List<Client> search(Integer pageIndex, String surname, String name, String phone, Integer discount, String filterDiscountOperator) {
         Pageable pageable = PageRequest.of(pageIndex, COUNT_CLIENTS_IN_PAGE, Sort.by("clSurname", "clName", "clPhone", "clDiscount"));
         if(surname != null && name != null && phone != null && filterDiscountOperator != null && discount != null){

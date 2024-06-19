@@ -14,22 +14,46 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
+/**
+ * REST контроллер, обрабатывающий HTTP-запросы для работы с данными о транспорте клиента
+ */
+//@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/clientsTransport")
 public class ClientsTransportController {
 
+    /**
+     * Сервис для работы с транспортом клиента
+     */
     private final ClientsTransportService clientsTransportService;
 
+    /**
+     * Сервис для валидации входных данных
+     */
     private final ValidateInputService validateInputService;
 
+
+    /**
+     * Конструктор для внедрения зависимостей
+     * @param clientsTransportService сервис для работы с транспортом клиента
+     * @param validateInputService сервис для валидации входных данных
+     */
     public ClientsTransportController(ClientsTransportService clientsTransportService, ValidateInputService validateInputService) {
         this.clientsTransportService = clientsTransportService;
         this.validateInputService = validateInputService;
     }
 
+    /**
+     * Метод, обрабатывающий GET запос на получение списка транспорта клиента
+     * @param clientId id клиента
+     * @param mark марка транспорта
+     * @param model модель транспорта
+     * @param category категория
+     * @param stateNumber госномер
+     * @return ResponseEntity со списком транспорта клиента и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом 500
+     */
     @GetMapping("/byClient")
-    public ResponseEntity<List<ClientsTransport>> getByClientId(@RequestParam(value = "clId") Long clientId, @RequestParam(value = "mark", required = false) String mark, @RequestParam(value = "model", required = false) String model,
+    public ResponseEntity<?> getByClientId(@RequestParam(value = "clId") Long clientId, @RequestParam(value = "mark", required = false) String mark, @RequestParam(value = "model", required = false) String model,
                                                                 @RequestParam(value = "category", required = false) String category, @RequestParam(value = "stateNumber", required = false) String stateNumber){
         try{
             List<ClientsTransport> clientsTransports;
@@ -41,22 +65,33 @@ public class ClientsTransportController {
 
             return new ResponseEntity<>(clientsTransports, HttpStatus.OK);
         }catch (Exception e){
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
+    /**
+     * Метод, обрабатывающий GET запрос на получение списка транспорта клиента по госномеру
+     * @param stateNumber госномер
+     * @return ResponseEntity со списком транспорта клиента и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом 500
+     */
     @GetMapping("/byStateNumber")
-    public ResponseEntity<List<ClientsTransport>> getByStateNumber(@RequestParam(value = "stateNumber") String stateNumber){
+    public ResponseEntity<?> getByStateNumber(@RequestParam(value = "stateNumber") String stateNumber){
         try{
             List<ClientsTransport> clientsTransports;
             clientsTransports = clientsTransportService.getByStateNumber(stateNumber);
             return new ResponseEntity<>(clientsTransports, HttpStatus.OK);
         }catch (Exception e){
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
 
+    /**
+     * Метод, обрабатывающий POST запрос на добавление транспорта клиента
+     * @param clientsTransport транспорт клиента
+     * @param bindingResult экземпляр интерфейса для обработки результатов валидации данных
+     * @return ResponseEntity с добавленным транспортом и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом
+     */
     @PostMapping("/create")
     public ResponseEntity<?> create(@RequestBody @Valid ClientsTransport clientsTransport, BindingResult bindingResult){
         try{
@@ -76,7 +111,13 @@ public class ClientsTransportController {
         }
     }
 
-
+    /**
+     * Метод, обрабатывающий PUT запрос на изменение данных о личном транспорте клиента
+     * @param id id транспорта клиента
+     * @param clientsTransport транспорт клиента с новыми данными
+     * @param bindingResult экземпляр интерфейса для обработки результатов валидации данных
+     * @return ResponseEntity с измененными данными о личном транспорте клиента и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом
+     */
     @PutMapping("/edit/{id}")
     public ResponseEntity<?> edit(@PathVariable("id") Long id, @RequestBody @Valid ClientsTransport clientsTransport, BindingResult bindingResult){
         try{
@@ -110,7 +151,11 @@ public class ClientsTransportController {
         }
     }
 
-
+    /**
+     * Метод, обрабатывающий DELETE запрос на удаление личного транспорта клиента
+     * @param id id личного транспорта клиента
+     * @return ResponseEntity с сообщением и статус-кодом
+     */
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> delete(@PathVariable("id") Long id){
         try{

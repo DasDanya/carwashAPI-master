@@ -22,19 +22,40 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
+/**
+ * REST контроллер, обрабатывающий HTTP-запросы для работы с данными о заказах
+ */
+//@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/bookings")
 public class BookingController {
 
+    /**
+     * Сервис для работы с заказами
+     */
     private final BookingService bookingService;
+    /**
+     * Сервис для валидации входных данных
+     */
     private final ValidateInputService validateInputService;
 
+    /**
+     * Конструктор для внедрения зависимостей
+     * @param bookingService сервис для работы с заказами
+     * @param validateInputService сервис для валидации входных данных
+     */
     public BookingController(BookingService bookingService, ValidateInputService validateInputService) {
         this.bookingService = bookingService;
         this.validateInputService = validateInputService;
     }
 
+    /**
+     * Метод, обрабатывающий GET запрос на получение заказов определенного бокса в указанном интервале времени
+     * @param startInterval начало временного интервала
+     * @param endInterval конец временного интервала
+     * @param boxId id бокса
+     * @return ResponseEntity со списком заказов и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом 500
+     */
     @GetMapping("/boxBookings")
     public ResponseEntity<?> getBoxBookings(@RequestParam("startInterval")LocalDateTime startInterval,
                                             @RequestParam("endInterval") LocalDateTime endInterval,
@@ -48,6 +69,19 @@ public class BookingController {
         }
     }
 
+    /**
+     * Метод, обрабатывающий GET запрос на получение заказов с учётом пагинации
+     * @param cleanerId id мойщика
+     * @param clientId id клиента
+     * @param boxId id бокса
+     * @param pageIndex индекс страницы
+     * @param startInterval начало временного интервала
+     * @param endInterval конец временного интервала
+     * @param bookingStatus статус заказа
+     * @param compareOperator оператор сравнения стоимости
+     * @param price стоимость
+     * @return ResponseEntity со списком заказов и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом 500
+     */
     @GetMapping
     public ResponseEntity<?> get(@RequestParam(value = "cleanerId", required = false) Long cleanerId,
                                                @RequestParam(value = "clientId",required = false) Long clientId,
@@ -67,6 +101,18 @@ public class BookingController {
         }
     }
 
+    /**
+     * Метод, обрабатывающий GET запрос на получение информации об общем количестве и стоимости заказов
+     * @param cleanerId id мойщика
+     * @param clientId id клиента
+     * @param boxId id бокса
+     * @param startInterval начало временного интервала
+     * @param endInterval конец временного интервала
+     * @param bookingStatus статус
+     * @param compareOperator заказа
+     * @param price оператор сравнения заказов
+     * @return ResponseEntity со списком заказов и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом 500
+     */
     @GetMapping("/getInfo")
     public ResponseEntity<?> getInfo(@RequestParam(value = "cleanerId", required = false) Long cleanerId,
                                     @RequestParam(value = "clientId",required = false) Long clientId,
@@ -85,6 +131,13 @@ public class BookingController {
         }
     }
 
+    /**
+     * Метод, обрабатывающий GET запрос на получение данных о работе мойщика
+     * @param cleanerId id мойщика
+     * @param startInterval начало временного интервала
+     * @param endInterval конец временного интервала
+     * @return ResponseEntity со списком заказов и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом 500
+     */
     @GetMapping("/getInfoAboutWorkOfCleaner")
     public ResponseEntity<?> getInfoAboutWorkOfCleaner(@RequestParam(value = "cleanerId") Long cleanerId,
                                                        @RequestParam(value = "startInterval",required = false)LocalDateTime startInterval,
@@ -98,6 +151,12 @@ public class BookingController {
         }
     }
 
+    /**
+     * Метод, обрабатывающий POST запрос на добавление заказа
+     * @param booking заказ
+     * @param bindingResult экземпляр интерфейса для обработки результатов валидации данных
+     * @return ResponseEntity c созданным заказом и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом 500
+     */
     @PostMapping("/create")
     public ResponseEntity<?> create(@RequestBody @Valid BookingDTO booking, BindingResult bindingResult){
         try{
@@ -120,6 +179,13 @@ public class BookingController {
         }
     }
 
+    /**
+     * Метод, обрабатывающий PUT запрос на изменение статуса заказа
+     * @param id id заказа
+     * @param bookingDTO данные об изменяемом заказе
+     * @param bindingResult экземпляр интерфейса для обработки результатов валидации данных
+     * @return ResponseEntity с заказом, у которого сменился статус, и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом
+     */
     @PutMapping("/newStatus/{id}")
     public ResponseEntity<?> newStatus(@PathVariable("id") String id, @RequestBody @Valid BookingDTO bookingDTO, BindingResult bindingResult){
         try{
@@ -146,6 +212,13 @@ public class BookingController {
         }
     }
 
+    /**
+     * Метод, обрабатывающий PUT запрос на изменение данных о заказе
+     * @param id id заказа
+     * @param booking заказ с новыми данными
+     * @param bindingResult экземпляр интерфейса для обработки результатов валидации данных
+     * @return ResponseEntity с измененным заказом и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом
+     */
     @PutMapping("/edit/{id}")
     public ResponseEntity<?> edit(@PathVariable("id") String id, @RequestBody @Valid BookingDTO booking, BindingResult bindingResult){
         try{
@@ -173,6 +246,11 @@ public class BookingController {
         }
     }
 
+    /**
+     * Метод, обрабатывающий DELETE запрос на удаление заказа
+     * @param id id заказа
+     * @return ResponseEntity с сообщением и статус-кодом
+     */
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> delete(@PathVariable("id") String id){
         try{
@@ -193,8 +271,5 @@ public class BookingController {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
-
-
 
 }

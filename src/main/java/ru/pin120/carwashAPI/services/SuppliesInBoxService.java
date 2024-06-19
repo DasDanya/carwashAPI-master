@@ -18,23 +18,47 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * Сервис расходных материалов в боксе
+ */
 @Service
 public class SuppliesInBoxService {
 
+    /**
+     * Репозиторий расходных материалов в боксе
+     */
     private final SuppliesInBoxRepository suppliesInBoxRepository;
 
+    /**
+     * Сервис расходных материалов
+     */
     private final SupplyService supplyService;
-    private final int COUNT_ITEMS_IN_PAGE = 3;
+    private final int COUNT_ITEMS_IN_PAGE = 12;
 
     @PersistenceContext
     private EntityManager entityManager;
 
+    /**
+     * Внедрение зависимостей
+     * @param suppliesInBoxRepository репозиторий расходных материалов в боксе
+     * @param supplyService сервис расходных материалов
+     */
     public SuppliesInBoxService(SuppliesInBoxRepository suppliesInBoxRepository, SupplyService supplyService) {
         this.suppliesInBoxRepository = suppliesInBoxRepository;
         this.supplyService = supplyService;
     }
 
 
+    /**
+     * Получение расходных материалов в боксе по указанных критериям
+     * @param boxId id бокса
+     * @param pageIndex индекс страницы
+     * @param supName название расходного материала
+     * @param supCategory название категории расходного материала
+     * @param operator оператор сравнения количества
+     * @param supCount количество расходного материала
+     * @return Список с расходными материалами в боксе
+     */
     public List<SuppliesInBox> get(Long boxId, int pageIndex, String supName, String supCategory, String operator, Integer supCount){
         Pageable pageable = PageRequest.of(pageIndex, COUNT_ITEMS_IN_PAGE);
         Map<String, Object> parameters = new HashMap<>();
@@ -67,16 +91,21 @@ public class SuppliesInBoxService {
         return query.getResultList();
     }
 
+    /**
+     * Добавление расходного материала в бокс
+     * @param suppliesInBox расходный материал в боксе
+     * @return Добавленный расходный материал в боксе
+     */
     @Transactional
     public SuppliesInBox add(SuppliesInBox suppliesInBox) {
         Optional<Supply> supplyOptional = supplyService.getById(suppliesInBox.getSupply().getSupId());
         if(supplyOptional.isEmpty()){
-            throw new EntityNotFoundException("Отсутсвует автомоечное средство, количество которого будет уменьшаться");
+            throw new EntityNotFoundException("Отсутсвует расходный материал, количество которого будет уменьшаться");
         }
         Supply supply = supplyOptional.get();
         int newCountSupply = supply.getSupCount() - suppliesInBox.getCountSupplies();
         if(newCountSupply < 0){
-            throw new IllegalArgumentException("Количество добавляемого автомоечного средства превышает его количество на складе");
+            throw new IllegalArgumentException("Количество добавляемого расходного материала превышает его количество на складе");
         }
         supply.setSupCount(newCountSupply);
         supplyService.save(supply);
@@ -94,16 +123,29 @@ public class SuppliesInBoxService {
         }
     }
 
-
+    /**
+     * Получение расходного материала в боксе по id
+     * @param id id расходного материала в боксе
+     * @return Объект Optional с расходным материалом в боксе, если он существует
+     */
     public Optional<SuppliesInBox> getById(Long id) {
         return suppliesInBoxRepository.findById(id);
     }
 
+    /**
+     * Удаление расходного материала в боксе
+     * @param suppliesInBox расходный материал в боксе
+     */
     @Transactional
     public void delete(SuppliesInBox suppliesInBox) {
         suppliesInBoxRepository.delete(suppliesInBox);
     }
 
+    /**
+     * Перевод расходного материала на склад
+     * @param addSuppliesFromBoxDTO информация о количестве расходного материала
+     * @param existedsuppliesInBox существующий расходный материал в боксе
+     */
     @Transactional
     public void transferToWarehouse(AddSuppliesFromBoxDTO addSuppliesFromBoxDTO, SuppliesInBox existedsuppliesInBox) {
         existedsuppliesInBox.setCountSupplies(addSuppliesFromBoxDTO.getSuppliesInBox().getCountSupplies());
@@ -111,7 +153,7 @@ public class SuppliesInBoxService {
 
         Optional<Supply> supplyOptional = supplyService.getById(addSuppliesFromBoxDTO.getSuppliesInBox().getSupply().getSupId());
         if(supplyOptional.isEmpty()){
-            throw new EntityNotFoundException("Отсутсвует автомоечное средство, переносимое на склад");
+            throw new EntityNotFoundException("Отсутсвует расходный материал, переносимый на склад");
         }
         Supply supply = supplyOptional.get();
         supply.setSupCount(supply.getSupCount() + addSuppliesFromBoxDTO.getCountOfAdded());
@@ -119,10 +161,20 @@ public class SuppliesInBoxService {
 
     }
 
+    /**
+     * Проверяет существование другого расходного материала в боксе
+     * @param suppliesInBox расходный материал в боксе
+     * @return true, если существует, иначе false
+     */
     public boolean existsOther(SuppliesInBox suppliesInBox) {
         return suppliesInBoxRepository.countByBoxIdAndSupplyIdExceptCurrent(suppliesInBox.getBox().getBoxId(), suppliesInBox.getSupply().getSupId(), suppliesInBox.getSibId()) > 0;
     }
 
+    /**
+     * Изменение данные о расходном материале в боксе
+     * @param suppliesInBox новые данные о расходном материале в боксе
+     * @param existedsuppliesInBox существующий расходный материал в боксе
+     */
     public void edit(SuppliesInBox suppliesInBox, SuppliesInBox existedsuppliesInBox) {
         existedsuppliesInBox.setBox(suppliesInBox.getBox());
         existedsuppliesInBox.setSupply(suppliesInBox.getSupply());
@@ -131,6 +183,12 @@ public class SuppliesInBoxService {
         suppliesInBoxRepository.save(existedsuppliesInBox);
     }
 
+    /**
+     * Получение списка расходных материалов в боксе определенной категории
+     * @param boxId id бокса
+     * @param categoryName название категории расходных материалов
+     * @return Саисок расходных материалов в боксе
+     */
     public List<SuppliesInBox> getListExistingSuppliesCertainCategory(Long boxId, String categoryName){
         return suppliesInBoxRepository.findByBox_BoxIdAndSupply_Category_cSupNameAndCountSuppliesGreaterThan(boxId, categoryName, 0);
     }

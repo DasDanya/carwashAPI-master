@@ -7,11 +7,20 @@ import lombok.Setter;
 
 import java.util.List;
 
+/**
+ * DTO с категориями и услугами автомойки
+ */
 @Getter
 @Setter
 @NoArgsConstructor
 public class CategoriesWithServicesDTO {
 
+    /**
+     * Название категории
+     */
     private String categoryName;
+    /**
+     * Услуги категории
+     */
     private List<String> servicesOfCategory;
 }

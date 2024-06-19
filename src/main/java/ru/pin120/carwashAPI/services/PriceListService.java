@@ -10,24 +10,42 @@ import ru.pin120.carwashAPI.repositories.PriceListRepository;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * Сервис для позиции прайс-листа
+ */
 @Service
 public class PriceListService {
 
+    /**
+     * Репозиторий позиции прайс-листа
+     */
     private final PriceListRepository priceListRepository;
 
-
+    /**
+     * Внедрение зависимости
+     * @param priceListRepository репозиторий позиции прайс-листа
+     */
     public PriceListService(PriceListRepository priceListRepository) {
         this.priceListRepository = priceListRepository;
     }
 
+    /**
+     * Получение списка позиций определенной услуги
+     * @param servName название услуги
+     * @return Список позиций
+     */
     public List<PriceList> getByServName(String servName){
         return priceListRepository.findByServiceName(servName);
 
     }
 
+    /**
+     * Получение списка услуг вместе со стоимостью и временем выполнения определенной категории транспорта
+     * @param catTrId id категории транспорта
+     * @return Список услуг вместе со стоимостью и временем выполнения
+     */
     public List<ServiceWithPriceListDTO> getTransportPriceList(Long catTrId){
         List<ServiceWithPriceListDTO> serviceWithPriceListDTOS = new ArrayList<>();
         List<PriceList> priceLists = priceListRepository.findByCategoryOfTransportCatTrId(catTrId);
@@ -40,47 +58,72 @@ public class PriceListService {
         return serviceWithPriceListDTOS;
     }
 
+    /**
+     * Проверяет существование позиции
+     * @param priceListPosition позиция в прайс-листе
+     * @return true, если существует, иначе false
+     */
     public boolean existPriceListPosition(PriceList priceListPosition){
         return priceListRepository.findByCategoryOfTransportCatTrIdAndServiceServName(priceListPosition.getCategoryOfTransport().getCatTrId(), priceListPosition.getService().getServName()).isPresent();
     }
 
+    /**
+     * Проверяет существование позиции
+     * @param catTrId id категории транспорта
+     * @param servName название услуги
+     * @return true, если существует, иначе false
+     */
     public boolean existPriceListPosition(Long catTrId, String servName){
         return priceListRepository.findByCategoryOfTransportCatTrIdAndServiceServName(catTrId, servName).isPresent();
     }
 
-    public boolean existsOtherPriceListPosition(PriceList priceListPosition){
-        Optional<PriceList> priceListOptional = priceListRepository.findByCategoryOfTransportCatTrIdAndServiceServName(priceListPosition.getCategoryOfTransport().getCatTrId(), priceListPosition.getService().getServName());
-        if(priceListOptional.isEmpty()){
-            return false;
-        }else{
-            if(Objects.equals(priceListOptional.get().getPlId(), priceListPosition.getPlId())){
-                return false;
-            }else{
-                return true;
-            }
-        }
-    }
 
+    /**
+     * Получение списка всех позиций прайс-листа
+     * @return Список со всеми позициями прайс-листа
+     */
     public List<PriceList> getAll() {
         Sort sort = Sort.by(Sort.Direction.ASC, "plPrice");
         return (List<PriceList>) priceListRepository.findAll(sort);
     }
 
+    /**
+     * Сохранение позиции
+     * @param priceListPosition позиция
+     */
     public void save(PriceList priceListPosition) {
         priceListRepository.save(priceListPosition);
     }
 
+    /**
+     * Получение позиции по id
+     * @param plId id позиции
+     * @return Объект Optional с позицией, если он существует
+     */
     public Optional<PriceList> getById(Long plId) {
         return priceListRepository.findByPlId(plId);
     }
 
-
+    /**
+     * Удаление позиции
+     * @param priceList позиция
+     */
     @Transactional
     public void delete(PriceList priceList) {
         priceListRepository.delete(priceList);
     }
 
-    public List<PriceList> filter(String servName,String catTrName, String priceOperator, Integer price, String timeOperator, Integer time) {
+    /**
+     * Поиск позиций
+     * @param servName название услуги
+     * @param catTrName название категории транспорта
+     * @param priceOperator оператор сравнения стоимости
+     * @param price стоимость
+     * @param timeOperator оператор сравнения времени выполнения
+     * @param time время выполнения
+     * @return Список найденных позиций
+     */
+    public List<PriceList> search(String servName, String catTrName, String priceOperator, Integer price, String timeOperator, Integer time) {
         if(catTrName != null && priceOperator != null && price != null && timeOperator != null && time != null){
             if(priceOperator.equals("<") && timeOperator.equals(">")){
                 return priceListRepository.query1(servName, catTrName, time, price);

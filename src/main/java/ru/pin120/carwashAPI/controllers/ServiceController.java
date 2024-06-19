@@ -23,44 +23,70 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
+/**
+ * REST контроллер, обрабатывающий HTTP-запросы для работы с данными об услугах автомойки
+ */
+//@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/services")
 public class ServiceController {
 
+    /**
+     * Сервис для работы с услугами автомойки
+     */
     private final ServService servService;
 
+    /**
+     * Сервис для валидации входных данных
+     */
     private final ValidateInputService validateInputService;
 
 
+    /**
+     * Конструктор для внедрения зависимостей
+     * @param servService сервис для работы с услугами автомойки
+     * @param validateInputService сервис для валидации входных данных
+     */
     public ServiceController(ServService servService, ValidateInputService validateInputService) {
         this.servService = servService;
         this.validateInputService = validateInputService;
     }
 
+    /**
+     * Метод, обрабатывающий GET запрос на получение списка услуг определенной категории
+     * @param categoryName название категории
+     * @return ResponseEntity со списком услуг автомойки и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом 500
+     */
     @GetMapping("/{categoryName}")
-    public ResponseEntity<List<Service>> getByCategoryName(@PathVariable(name = "categoryName") String categoryName){
-        List<Service> services = new ArrayList<>();
+    public ResponseEntity<?> getByCategoryName(@PathVariable(name = "categoryName") String categoryName){
+        List<Service> services;
         try{
             //categoryName = URLDecoder.decode(categoryName, "UTF-8");
             services = servService.getByCategoryName(categoryName);
         }catch (Exception e){
-            return new ResponseEntity<>(services, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         return new ResponseEntity<>(services, HttpStatus.OK);
     }
-    public ResponseEntity<List<ServiceDTO>> getAll(){
-        List<ServiceDTO> serviceDTOS = new ArrayList<>();
-        try{
-            serviceDTOS = servService.getAllServices();
-        }catch (Exception e){
-            return new ResponseEntity<>(serviceDTOS, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
 
-        return new ResponseEntity<>(serviceDTOS, HttpStatus.OK);
-    }
 
+//    public ResponseEntity<List<ServiceDTO>> getAll(){
+//        List<ServiceDTO> serviceDTOS = new ArrayList<>();
+//        try{
+//            serviceDTOS = servService.getAllServices();
+//        }catch (Exception e){
+//            return new ResponseEntity<>(serviceDTOS, HttpStatus.INTERNAL_SERVER_ERROR);
+//        }
+//
+//        return new ResponseEntity<>(serviceDTOS, HttpStatus.OK);
+//    }
+
+    /**
+     * Метод, обрабатывающий GET запрос на получение ServiceDTO по названию услуги
+     * @param servName название услуги
+     * @return ResponseEntity со SerivceDTO и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом 500
+     */
     @GetMapping("/getByServName/{servName}")
     public ResponseEntity<ServiceDTO> getByServName(@PathVariable("servName") String servName){
         ServiceDTO serviceDTO = null;
@@ -74,17 +100,28 @@ public class ServiceController {
         return new ResponseEntity<>(serviceDTO, HttpStatus.OK);
     }
 
+    /**
+     * Метод, обрабатывающий GET запрос на получение услуги по её названию
+     * @param servName название услуги
+     * @return ResponseEntity со услугой и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом 500
+     */
     @GetMapping("/get/{servName}")
-    public ResponseEntity<Service> getService(@PathVariable("servName") String servName){
+    public ResponseEntity<?> getService(@PathVariable("servName") String servName){
         try{
             Optional<Service> serviceOptional = servService.getByServName(servName);
             return serviceOptional.map(service -> new ResponseEntity<>(service, HttpStatus.OK)).orElseGet(() -> new ResponseEntity<>(null, HttpStatus.NOT_FOUND));
 
         }catch (Exception e){
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
+    /**
+     * Метод, обрабатывающий POST запрос на добавление услуги
+     * @param serviceDTO услуга
+     * @param bindingResult экземпляр интерфейса для обработки результатов валидации данных
+     * @return ResponseEntity с добавленной услугой и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом
+     */
     @PostMapping("/create")
     public ResponseEntity<?> createService(@RequestBody @Valid ServiceDTO serviceDTO, BindingResult bindingResult){
         Service service = null;
@@ -106,7 +143,12 @@ public class ServiceController {
         return new ResponseEntity<>(service, HttpStatus.OK);
     }
 
-
+    /**
+     * Метод, обрабатывающий PUT запрос на изменение списка привязанных категорий расходных материалов к услуге
+     * @param servName название услуги
+     * @param service услуга с новыми привязанными категориями расходных материалов
+     * @return ResponseEntity с услугой и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом
+     */
     @PutMapping("/necessaryCategoriesOfSupplies/{servName}")
     public ResponseEntity<?> editCategoriesOfSupplies(@PathVariable("servName") String servName,@RequestBody Service service){
         try{
@@ -128,9 +170,15 @@ public class ServiceController {
         }
     }
 
+    /**
+     * Метод, обрабатывающий PUT запрос на привязку услуг к указанной категории
+     * @param bindWithCategoryDTO DTO для привязки услуг к указанной категории
+     * @param bindingResult экземпляр интерфейса для обработки результатов валидации данных
+     * @return ResponseEntity со списком услуг указанной категории и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом
+     */
     @PutMapping("/bindServicesToCategory")
     public ResponseEntity<?> bindServicesToCategory(@RequestBody @Valid BindWithCategoryDTO bindWithCategoryDTO, BindingResult bindingResult){
-        List<Service> services = null;
+        List<Service> services;
         if(bindingResult.hasErrors()){
             return new ResponseEntity<>(validateInputService.getErrors(bindingResult), HttpStatus.BAD_REQUEST);
         }
@@ -144,9 +192,15 @@ public class ServiceController {
         return new ResponseEntity<>(services, HttpStatus.OK);
     }
 
+    /**
+     * Метод, обрабатывающий PUT запрос на привязку услуги к указанной категории
+     * @param bindWithCategoryDTO DTO для привязки услуги к указанной категории
+     * @param bindingResult экземпляр интерфейса для обработки результатов валидации данных
+     * @return ResponseEntity с услугой и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом
+     */
     @PutMapping("/bindServiceToCategory")
     public ResponseEntity<?> bindServiceToCategory(@RequestBody @Valid BindWithCategoryDTO bindWithCategoryDTO, BindingResult bindingResult){
-        Service service = null;
+        Service service;
         if(bindingResult.hasErrors()){
             return new ResponseEntity<>(validateInputService.getErrors(bindingResult), HttpStatus.BAD_REQUEST);
         }
@@ -160,14 +214,18 @@ public class ServiceController {
         return new ResponseEntity<>(service, HttpStatus.OK);
     }
 
-
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<String> deleteService(@PathVariable("id") String id){
+    /**
+     * Метод, обрабатывающий DELETE запрос на удаление услуги автомойки
+     * @param name название услуги
+     * @return ResponseEntity с сообщением и статус-кодом
+     */
+    @DeleteMapping("/delete/{name}")
+    public ResponseEntity<String> deleteService(@PathVariable("name") String name){
         try{
             //id = URLDecoder.decode(id, "UTF-8");
-            Optional<Service> serviceOptional = servService.getByServName(id);
+            Optional<Service> serviceOptional = servService.getByServName(name);
             if(serviceOptional.isEmpty()){
-                return new ResponseEntity<>(String.format("Услуга %s отсутствует в базе данных", id),HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>(String.format("Услуга %s отсутствует в базе данных", name),HttpStatus.BAD_REQUEST);
             }
 
             Service service = serviceOptional.get();

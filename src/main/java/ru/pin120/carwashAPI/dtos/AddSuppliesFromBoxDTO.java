@@ -9,14 +9,23 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ru.pin120.carwashAPI.models.SuppliesInBox;
 
+/**
+ * DTO для добавления расходных материалов
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
 public class AddSuppliesFromBoxDTO {
+    /**
+     * Расходный материал в боксе
+     */
     @Valid
     private SuppliesInBox suppliesInBox;
 
+    /**
+     * Количество добавляемого расходного материала
+     */
     @PositiveOrZero(message = "Количество должно быть неотрицательным")
     private int countOfAdded;
 }

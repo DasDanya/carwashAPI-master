@@ -22,21 +22,46 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
+/**
+ * REST контроллер, обрабатывающий HTTP-запросы для работы с данными о мойщиках
+ */
+//@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/cleaners")
 public class CleanerController {
 
+    /**
+     * Сервис для работы с мойщиками
+     */
     private final CleanerService cleanerService;
+
+    /**
+     * Сервис для валидации входных данных
+     */
     private final ValidateInputService validateInputService;
 
+
+    /**
+     * Конструктор для внедрения зависимостей
+     * @param cleanerService сервис для работы с мойщиками
+     * @param validateInputService сервис для валидации входных данных
+     */
     public CleanerController(CleanerService cleanerService, ValidateInputService validateInputService) {
         this.cleanerService = cleanerService;
         this.validateInputService = validateInputService;
     }
 
+    /**
+     * Метод, обрабатывающий GET запрос на получение списка мойщиков
+     * @param surname фамилия мойщика
+     * @param name имя мойщика
+     * @param patronymic отчество мойщика
+     * @param phone номер телефона
+     * @param status статус
+     * @return ResponseEntity со списком мойщиков и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом 500
+     */
     @GetMapping
-    public ResponseEntity<List<Cleaner>> get(
+    public ResponseEntity<?> get(
             @RequestParam(value = "surname",required = false) String surname,
             @RequestParam(value = "name",required = false) String name,
             @RequestParam(value = "patronymic",required = false) String patronymic,
@@ -48,11 +73,18 @@ public class CleanerController {
             List<Cleaner> cleaners = cleanerService.get(surname, name,patronymic,phone,status);
             return new ResponseEntity<>(cleaners, HttpStatus.OK);
         }catch (Exception e){
-            e.printStackTrace();
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
+    /**
+     * Метод, обрабатывающий GET запрос на получение рабочих дней мойщика
+     * @param startInterval начало временного интервала
+     * @param endInterval конец временного интервала
+     * @param boxId id бокса
+     * @param currentMonth текущий ли месяц
+     * @return ResponseEntity со списком рабочих дней мойщика и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом
+     */
     @GetMapping("/workSchedule")
     public ResponseEntity<?> getWithWorkSchedule(@RequestParam(value = "startInterval") LocalDate startInterval,
                                                                 @RequestParam(value = "endInterval") LocalDate endInterval,
@@ -74,17 +106,29 @@ public class CleanerController {
         }
     }
 
+    /**
+     * Метод, обрабатывающий GET запрос на получение фотографии мойщика
+     * @param photoName название фотографии
+     * @return ResponseEntity с фотографией мойщика в виде массива байт и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом 500
+     */
     @GetMapping("/getPhoto/{photoName}")
-    public ResponseEntity<byte[]> getPhoto(@PathVariable("photoName")String photoName){
+    public ResponseEntity<?> getPhoto(@PathVariable("photoName")String photoName){
         try{
             //ByteSenderDTO byteSenderDTO = new ByteSenderDTO(cleanerService.getPhoto(photoName));
             String photoBase64 = Base64.getEncoder().encodeToString(cleanerService.getPhoto(photoName));
             return new ResponseEntity<>(cleanerService.getPhoto(photoName), HttpStatus.OK);
         }catch (Exception e){
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
+    /**
+     * Метод, обрабатывающий POST запрос на добавление мойщика
+     * @param cleaner мойщик
+     * @param bindingResult экземпляр интерфейса для обработки результатов валидации данных
+     * @param photo фотография мойщика
+     * @return ResponseEntity с добавленным мойщиком и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом
+     */
     @PostMapping("/create")
     public ResponseEntity<?> create(@RequestPart @Valid Cleaner cleaner, BindingResult bindingResult, @RequestPart(required = false) MultipartFile photo){
         try{
@@ -103,6 +147,14 @@ public class CleanerController {
         }
     }
 
+    /**
+     * Метод, обрабатывающий PUT запрос на изменение данных о мойщике
+     * @param id id мойщика
+     * @param cleaner мойщик с новыми данными
+     * @param bindingResult экземпляр интерфейса для обработки результатов валидации данных
+     * @param photo фотография
+     * @return ResponseEntity с измененными данными о мойщике и статус-кодом 200, если все прошло успешно, иначе ResponseEntity с сообщением об ошибке и статус-кодом
+     */
     @PutMapping("/edit/{id}")
     public ResponseEntity<?> edit(@PathVariable("id") Long id, @RequestPart @Valid Cleaner cleaner, BindingResult bindingResult, @RequestPart(required = false) MultipartFile photo){
         try{
@@ -131,6 +183,11 @@ public class CleanerController {
         }
     }
 
+    /**
+     * Метод, обрабатывающий DELETE запрос на удаление мойщика
+     * @param id id мойщика
+     * @return ResponseEntity с сообщением и статус-кодом
+     */
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> delete(@PathVariable("id") Long id){
         try{

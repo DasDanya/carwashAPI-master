@@ -31,15 +31,42 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * Сервис пользователя
+ */
 @Service
 public class UserService {
 
+    /**
+     * Репозиторий пользователя
+     */
     private final UserRepository userRepository;
+    /**
+     * Класс для шифрования/дешифрования данных
+     */
     private final Aes aes;
+    /**
+     * Кодировщик пароля
+     */
     private final PasswordEncoder encoder;
+    /**
+     * Менеджер аутентификации
+     */
     private final AuthenticationManager authenticationManager;
+
+    /**
+     * Класс для работы с JWT токеном
+     */
     private final JwtUtils jwtUtils;
 
+    /**
+     * Внедрение зависимостей
+     * @param userRepository репозиторий пользователя
+     * @param aes класс для шифрования/дешифрования данных
+     * @param encoder кодировщик пароля
+     * @param authenticationManager менеджер аутентификации
+     * @param jwtUtils класс для работы с JWT токеном
+     */
     public UserService(UserRepository userRepository, Aes aes, PasswordEncoder encoder, AuthenticationManager authenticationManager, JwtUtils jwtUtils) {
         this.userRepository = userRepository;
         this.aes = aes;
@@ -48,6 +75,18 @@ public class UserService {
         this.jwtUtils = jwtUtils;
     }
 
+    /**
+     * Создание нового пользователя
+     *
+     * @param registerRequest данные, необходимые для создания пользователя
+     * @return JwtResponse объект с JWT токеном и DTO пользователя
+     * @throws UserExistsException если пользователь с указанным именем уже существует
+     * @throws NoSuchPaddingException если возникает ошибка при шифровании/дешифровании данных
+     * @throws IllegalBlockSizeException если возникает ошибка при шифровании/дешифровании данных
+     * @throws NoSuchAlgorithmException если используемый алгоритм не поддерживается
+     * @throws BadPaddingException если возникает ошибка при шифровании/дешифровании данных
+     * @throws InvalidKeyException если указанный ключ недопустим
+     */
     public JwtResponse create(RegisterRequest registerRequest) throws NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
         User user = new User();
         user.setUsName(aes.decrypt(registerRequest.getUsername()));
@@ -68,6 +107,17 @@ public class UserService {
         return new JwtResponse(jwtToken, toDTO(user));
     }
 
+    /**
+     * Преобразует объект пользователя в DTO
+     *
+     * @param user пользователь для преобразования
+     * @return UserDTO, содержащий зашифрованные данные пользователя
+     * @throws IllegalBlockSizeException если возникает ошибка при шифровании/дешифровании данных
+     * @throws NoSuchPaddingException если используемый алгоритм шифрования не существует
+     * @throws NoSuchAlgorithmException если используемый алгоритм шифрования не поддерживается
+     * @throws BadPaddingException если возникает ошибка при шифровании/дешифровании данных
+     * @throws InvalidKeyException если указанный ключ недопустим
+     */
     private UserDTO toDTO(User user) throws IllegalBlockSizeException, NoSuchPaddingException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
         UserDTO userDTO = new UserDTO();
         userDTO.setUsId(aes.encrypt(user.getUsId().toString()));
@@ -76,6 +126,16 @@ public class UserService {
         return userDTO;
     }
 
+    /**
+     * Получение списка всех пользователей
+     *
+     * @return список UserDTO, представляющих зашифрованные данные пользователей
+     * @throws IllegalBlockSizeException если возникает ошибка при шифровании/дешифровании данных
+     * @throws NoSuchPaddingException если используемый алгоритм шифрования не существует
+     * @throws NoSuchAlgorithmException если используемый алгоритм шифрования не поддерживается
+     * @throws BadPaddingException если возникает ошибка при шифровании/дешифровании данных
+     * @throws InvalidKeyException если указанный ключ недопустим
+     */
     public List<UserDTO> getAll() throws IllegalBlockSizeException, NoSuchPaddingException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
         Sort sort = Sort.by(Sort.Order.desc("usRole"), Sort.Order.asc("usName"));
         List<User> users = userRepository.findAll(sort);
@@ -88,6 +148,17 @@ public class UserService {
         return userDTOS;
     }
 
+    /**
+     * Аутентификация пользователя по данным из запроса на вход
+     *
+     * @param loginRequest данные о пользователе (имя пользователя и пароль)
+     * @return JwtResponse объект с JWT токеном и DTO пользователя
+     * @throws NoSuchPaddingException если возникает ошибка при шифровании/дешифровании данных
+     * @throws IllegalBlockSizeException если возникает ошибка при шифровании/дешифровании данных
+     * @throws NoSuchAlgorithmException если используемый алгоритм не поддерживается
+     * @throws BadPaddingException если возникает ошибка при шифровании/дешифровании данных
+     * @throws InvalidKeyException если указанный ключ недопустим
+     */
     public JwtResponse login(LoginRequest loginRequest) throws NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
         String username = aes.decrypt(loginRequest.getUsername());
         String password = aes.decrypt(loginRequest.getPassword());
@@ -105,10 +176,20 @@ public class UserService {
         return new JwtResponse(jwtToken, toDTO(userDetails.getUser()));
     }
 
+    /**
+     * Получение пользователя по его имени
+     *
+     * @param usName имя пользователя
+     * @return Optional объект, содержащий найденного пользователя или пустой, если пользователь не найден
+     */
     public Optional<User> getByUsName(String usName) {
         return userRepository.findByUsName(usName);
     }
 
+    /**
+     * Удаление пользователя
+     * @param user пользователь
+     */
     @Transactional
     public void delete(User user) {
         if(user.getUsRole() == UserRole.OWNER){
@@ -118,6 +199,21 @@ public class UserService {
         }
     }
 
+    /**
+     * Изменение пароля пользователя
+     *
+     * @param user пользователь, чей пароль нужно изменить
+     * @param password новый пароль пользователя
+     * @param authorizationHeader заголовок авторизации с JWT токеном
+     * @return JwtResponse объект с обновленным JWT токеном и DTO пользователя
+     * @throws NoSuchPaddingException если возникает ошибка при шифровании/дешифровании данных
+     * @throws IllegalBlockSizeException если возникает ошибка при шифровании/дешифровании данных
+     * @throws NoSuchAlgorithmException если используемый алгоритм не поддерживается
+     * @throws BadPaddingException если возникает ошибка при шифровании/дешифровании данных
+     * @throws InvalidKeyException если указанный ключ недопустим
+     * @throws EntityNotFoundException если пользователь, выполняющий операцию, не найден
+     * @throws IllegalArgumentException при попытке изменения пароля другому владельцу или при отсутствии JWT токена
+     */
     public JwtResponse editPassword(User user, String password, String authorizationHeader) throws NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
         String jwtToken = jwtUtils.getJwtToken(authorizationHeader);
         if(jwtToken != null){

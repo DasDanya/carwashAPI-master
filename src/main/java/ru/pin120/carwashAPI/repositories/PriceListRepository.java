@@ -9,22 +9,61 @@ import ru.pin120.carwashAPI.models.PriceList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Репозиторий позиции прайс-листа
+ */
 @Repository
 public interface PriceListRepository extends PagingAndSortingRepository<PriceList, Long> {
 
+    /**
+     * Поиск позиций прайс-листа по названию услуги
+     *
+     * @param servName имя услуги для поиска
+     * @return список позиций прайс-листа, удовлетворяющих критериям поиска, отсортированный по категории транспорта
+     */
     @Query("SELECT p FROM PriceList p WHERE p.service.servName = :servName ORDER BY p.categoryOfTransport.catTrName ASC")
     List<PriceList> findByServiceName(@Param("servName") String servName);
 
 
+
+    /**
+     * Поиск позиций прайс-листа по id категории транспорта
+     *
+     * @param catTrId id категории транспорта для поиска
+     * @return список позиций прайс-листа, удовлетворяющих критериям поиска, отсортированный по названию категории и названию услуги
+     */
     @Query("SELECT p FROM PriceList p WHERE p.categoryOfTransport.catTrId = :catTrId ORDER BY p.service.category.catName, p.service.servName ASC")
     List<PriceList> findByCategoryOfTransportCatTrId(Long catTrId);
 
+    /**
+     * Поиск позиций прайс-листа по id категории транспорта и названию услуги
+     *
+     * @param catTrId  id категории транспорта для поиска
+     * @param servName название услуги для поиска
+     * @return объект Optional, содержащий найденную запись в прайс-листе или пустой, если запись не найдена
+     */
     Optional<PriceList> findByCategoryOfTransportCatTrIdAndServiceServName(Long catTrId, String servName);
 
+    /**
+     * Поиск позиции в прайс-листе по id
+     *
+     * @param plId id записи в прайс-листе для поиска
+     * @return объект Optional, содержащий найденную позицию в прайс-листе или пустой, если позиция не найдена
+     */
     Optional<PriceList> findByPlId(Long plId);
 
+    /**
+     * Сохранение позиции в прайс-лист
+     *
+     * @param priceListPosition позиция прайс-листа
+     */
     void save(PriceList priceListPosition);
 
+    /**
+     * Удаление позиции из прайс-листа
+     *
+     * @param priceList позиция прайс-листа для удаления
+     */
     void delete(PriceList priceList);
 
 

@@ -22,18 +22,40 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+/**
+ * Сервис для мойщика
+ */
 @Service
 public class CleanerService {
 
     private static final String PATH_TO_PHOTOS= "src/main/resources/static/images/cleaners/";
     private static final String NAME_DEFAULT_PHOTO = "avatardefault.jpg";
+    /**
+     * Репозиторий мойщика
+     */
     private final CleanerRepository cleanerRepository;
+    /**
+     * Сервис для работы с фотографиями
+     */
     private final FilesService filesService;
+    /**
+     * Сервис рабочих дней
+     */
     private final WorkScheduleService workScheduleService;
+    /**
+     * Сервис боксов
+     */
     private final BoxService boxService;
     @PersistenceContext
     private EntityManager entityManager;
 
+    /**
+     * Внедрение зависимостей
+     * @param cleanerRepository репозиторий мойщика
+     * @param filesService сервис для работы с фотографиями
+     * @param workScheduleService сервис рабочих дней
+     * @param boxService сервис боксов
+     */
     public CleanerService(CleanerRepository cleanerRepository, FilesService filesService, WorkScheduleService workScheduleService, BoxService boxService) {
         this.cleanerRepository = cleanerRepository;
         this.filesService = filesService;
@@ -41,6 +63,15 @@ public class CleanerService {
         this.boxService = boxService;
     }
 
+    /**
+     * Получение списка мойщиков по различным параметрам
+     * @param surname фамилия
+     * @param name имя
+     * @param patronymic отчество
+     * @param phone номер телефона
+     * @param status статус
+     * @return Список мойщиков
+     */
     public List<Cleaner> get(String surname, String name, String patronymic, String phone, CleanerStatus status){
         String baseQuery = "SELECT cl FROM Cleaner cl";
         String partQuery = "";
@@ -96,7 +127,14 @@ public class CleanerService {
         return query.getResultList();
     }
 
-
+    /**
+     * Получение списка мойщиков с их рабочими днями
+     * @param startInterval начало временного интервала
+     * @param endInterval конец временного интервала
+     * @param boxId id бокса
+     * @param currentMonth текущий ли месяц
+     * @return Список мойщиков с их рабочими днями
+     */
     public List<CleanerDTO> getCleanersWithWorkSchedule(LocalDate startInterval, LocalDate endInterval, Long boxId, boolean currentMonth){
         List<Cleaner> cleaners = (List<Cleaner>) cleanerRepository.findAll();
         Predicate<Cleaner> predicate = getCleanerPredicate(startInterval, endInterval, boxId, currentMonth);
@@ -134,6 +172,14 @@ public class CleanerService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Получение предиката для фильтрации мойщиков
+     * @param startInterval начало временного интервала
+     * @param endInterval конец временного интервала
+     * @param boxId id бокса
+     * @param currentMonth текущий ли месяц
+     * @return Предикат для фильтрации мойщиков
+     */
     private static Predicate<Cleaner> getCleanerPredicate(LocalDate startInterval, LocalDate endInterval, Long boxId, boolean currentMonth) {
         Predicate<Cleaner> predicate;
         if(currentMonth){
@@ -148,16 +194,32 @@ public class CleanerService {
         return predicate;
     }
 
-
+    /**
+     * Получение фотографии мойщика
+     * @param photoName название фотографии
+     * @return Фотография мойщика
+     * @throws IOException если произошла ошибка при чтении файла фотографии
+     */
     public byte[] getPhoto(String photoName) throws IOException {
         return filesService.getFile(PATH_TO_PHOTOS + photoName);
     }
 
+    /**
+     * Получение мойщика по id
+     * @param clrId id мойщика
+     * @return Объект Optional с мойщиком, если он существует
+     */
     public Optional<Cleaner> getById(Long clrId){
         return cleanerRepository.findById(clrId);
     }
 
-    public void create(Cleaner cleaner, MultipartFile photo) throws Exception {
+    /**
+     * Создание мойщика
+     * @param cleaner данные о мойщике
+     * @param photo фотография мойщика
+     * @throws IOException если произошла ошибка при сохранении фотографии
+     */
+    public void create(Cleaner cleaner, MultipartFile photo) throws IOException {
         cleaner.setClrStatus(CleanerStatus.ACT);
         boolean saveDefaultPhoto = photo == null;
         if(saveDefaultPhoto){
@@ -176,8 +238,13 @@ public class CleanerService {
         }
     }
 
+    /**
+     * Удаление мойщика
+     * @param cleaner мойщик
+     * @throws IOException если произошла ошибка при удалении фотографии мойщика
+     */
     @Transactional
-    public void delete(Cleaner cleaner) throws Exception {
+    public void delete(Cleaner cleaner) throws IOException {
         String filename = cleaner.getClrPhotoName();
         cleanerRepository.delete(cleaner);
         if(!filename.equals(NAME_DEFAULT_PHOTO)){
@@ -185,8 +252,15 @@ public class CleanerService {
         }
     }
 
+    /**
+     * Изменение данных о мойщике
+     * @param existedCleaner изменяемый мойщик
+     * @param cleaner новые данные о мойщике
+     * @param photo фотография мойщика
+     * @throws IOException если произошла ошибка при работе с фотографией мойщика
+     */
     @Transactional
-    public void edit(Cleaner existedCleaner, Cleaner cleaner, MultipartFile photo) throws Exception {
+    public void edit(Cleaner existedCleaner, Cleaner cleaner, MultipartFile photo) throws IOException {
         existedCleaner.setClrSurname(cleaner.getClrSurname());
         existedCleaner.setClrName(cleaner.getClrName());
         existedCleaner.setClrPatronymic(cleaner.getClrPatronymic());

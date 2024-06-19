@@ -14,15 +14,20 @@ import lombok.Setter;
 
 import java.util.List;
 
+/**
+ * Модель услуги
+ */
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-//@Table(name = "services", uniqueConstraints = @UniqueConstraint(columnNames = "serv_name"))
 @Table(name = "services")
 public class Service {
 
+    /**
+     * Название
+     */
     @Id
     @Column(unique = true,nullable = false, length = 30)
     @Size(max = 30, message = "Максимальная длина 30 символов")
@@ -30,16 +35,25 @@ public class Service {
     @NotBlank(message = "Необходимо ввести название услуги")
     private String servName;
 
+    /**
+     * Категория
+     */
     @ManyToOne
     @NotNull(message = "Необходимо указать категорию услуг")
     @JoinColumn(name="cat_name", nullable = false)
     @JsonBackReference
     private CategoryOfServices category;
 
+    /**
+     * Позиции в прайс-листе
+     */
     @OneToMany(mappedBy = "service", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<PriceList> priceList;
 
+    /**
+     * Необходимые категории расходных материалов
+     */
     @ManyToMany
     @JoinTable(name = "cat_of_supplies_for_service",
             joinColumns = @JoinColumn(name = "serv_name",nullable = false),
@@ -47,10 +61,18 @@ public class Service {
             uniqueConstraints = @UniqueConstraint(columnNames = {"serv_name", "c_sup_name"}))
     private List<CategoryOfSupplies> categoriesOfSupplies;
 
+    /**
+     * Список заказов
+     */
     @ManyToMany(mappedBy = "services")
     @JsonIgnore
     private List<Booking> bookings;
 
+    /**
+     * Конструктор
+     * @param servName Название
+     * @param category Категория
+     */
     public Service(String servName, CategoryOfServices category) {
         this.servName = servName;
         this.category = category;

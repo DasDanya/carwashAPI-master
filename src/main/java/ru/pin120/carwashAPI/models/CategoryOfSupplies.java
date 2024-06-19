@@ -13,7 +13,9 @@ import lombok.Setter;
 
 import java.util.List;
 
-
+/**
+ * Модель категории расходных материалов
+ */
 @Entity
 @Getter
 @Setter
@@ -22,18 +24,27 @@ import java.util.List;
 @Table(name = "categories_of_supplies")
 public class CategoryOfSupplies {
 
+    /**
+     * Название
+     */
     @Id
     @Column(unique = true,nullable = false, length = 50)
     @Size(max = 50, message = "Максимальная длина 50 символов")
     @Pattern(regexp = "^[а-яА-ЯёЁ -]+$", message = "Допустимые символы для названия: кириллица и пробелы")
-    @NotBlank(message = "Необходимо ввести название категории автомоечных средств")
+    @NotBlank(message = "Необходимо ввести название категории расходных материалов")
     private String cSupName;
 
+    /**
+     * Единица измерения
+     */
     @Column(length = 30)
     @Enumerated(EnumType.STRING)
     @NotNull(message = "Необходимо указать меру измерения")
     private UnitOfMeasure unit;
 
+    /**
+     * Расходные материалы
+     */
     @OneToMany(mappedBy = "category")
     @JsonIgnore
     private List<Supply> supplies;
