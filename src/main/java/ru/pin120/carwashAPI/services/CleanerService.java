@@ -5,6 +5,8 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import ru.pin120.carwashAPI.Exceptions.FileIsNotImageException;
@@ -28,8 +30,6 @@ import java.util.stream.Collectors;
 @Service
 public class CleanerService {
 
-    private static final String PATH_TO_PHOTOS= "src/main/resources/static/images/cleaners/";
-    private static final String NAME_DEFAULT_PHOTO = "avatardefault.jpg";
     /**
      * Репозиторий мойщика
      */
@@ -48,6 +48,8 @@ public class CleanerService {
     private final BoxService boxService;
     @PersistenceContext
     private EntityManager entityManager;
+    @Autowired
+    private Environment environment;
 
     /**
      * Внедрение зависимостей
@@ -201,7 +203,7 @@ public class CleanerService {
      * @throws IOException если произошла ошибка при чтении файла фотографии
      */
     public byte[] getPhoto(String photoName) throws IOException {
-        return filesService.getFile(PATH_TO_PHOTOS + photoName);
+        return filesService.getFile(environment.getProperty("PATH_TO_PHOTOS_CLEANER") + photoName);
     }
 
     /**
@@ -223,13 +225,13 @@ public class CleanerService {
         cleaner.setClrStatus(CleanerStatus.ACT);
         boolean saveDefaultPhoto = photo == null;
         if(saveDefaultPhoto){
-            cleaner.setClrPhotoName(NAME_DEFAULT_PHOTO);
+            cleaner.setClrPhotoName(environment.getProperty("NAME_DEFAULT_PHOTO_CLEANER"));
             cleanerRepository.save(cleaner);
         }else{
             if(filesService.isImage(photo)) {
                 cleanerRepository.save(cleaner);
                 String photoName = cleaner.getClrId() + photo.getOriginalFilename().substring(photo.getOriginalFilename().lastIndexOf('.'));
-                filesService.saveImage(photo, PATH_TO_PHOTOS + photoName);
+                filesService.saveImage(photo, environment.getProperty("PATH_TO_PHOTOS_CLEANER") + photoName);
                 cleaner.setClrPhotoName(photoName);
                 cleanerRepository.save(cleaner);
             }else{
@@ -247,8 +249,8 @@ public class CleanerService {
     public void delete(Cleaner cleaner) throws IOException {
         String filename = cleaner.getClrPhotoName();
         cleanerRepository.delete(cleaner);
-        if(!filename.equals(NAME_DEFAULT_PHOTO)){
-            filesService.deleteFile(PATH_TO_PHOTOS + filename);
+        if(!filename.equals(environment.getProperty("NAME_DEFAULT_PHOTO_CLEANER"))){
+            filesService.deleteFile(environment.getProperty("PATH_TO_PHOTOS_CLEANER") + filename);
         }
     }
 
@@ -280,11 +282,11 @@ public class CleanerService {
 
         if(photo != null){
             if(filesService.isImage(photo)){
-                if(!existedCleaner.getClrPhotoName().equals(NAME_DEFAULT_PHOTO)){
-                    filesService.deleteFile(PATH_TO_PHOTOS + existedCleaner.getClrPhotoName());
+                if(!existedCleaner.getClrPhotoName().equals(environment.getProperty("NAME_DEFAULT_PHOTO_CLEANER"))){
+                    filesService.deleteFile(environment.getProperty("PATH_TO_PHOTOS_CLEANER") + existedCleaner.getClrPhotoName());
                 }
                 String photoName = existedCleaner.getClrId() + photo.getOriginalFilename().substring(photo.getOriginalFilename().lastIndexOf('.'));
-                filesService.saveImage(photo, PATH_TO_PHOTOS + photoName);
+                filesService.saveImage(photo, environment.getProperty("PATH_TO_PHOTOS_CLEANER") + photoName);
                 existedCleaner.setClrPhotoName(photoName);
             }else{
                 throw new FileIsNotImageException("Файл не является изображением");

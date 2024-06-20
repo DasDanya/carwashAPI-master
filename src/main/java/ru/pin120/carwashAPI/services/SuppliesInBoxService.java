@@ -4,6 +4,8 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -33,10 +35,12 @@ public class SuppliesInBoxService {
      * Сервис расходных материалов
      */
     private final SupplyService supplyService;
-    private final int COUNT_ITEMS_IN_PAGE = 12;
 
     @PersistenceContext
     private EntityManager entityManager;
+
+    @Autowired
+    private Environment environment;
 
     /**
      * Внедрение зависимостей
@@ -60,7 +64,7 @@ public class SuppliesInBoxService {
      * @return Список с расходными материалами в боксе
      */
     public List<SuppliesInBox> get(Long boxId, int pageIndex, String supName, String supCategory, String operator, Integer supCount){
-        Pageable pageable = PageRequest.of(pageIndex, COUNT_ITEMS_IN_PAGE);
+        Pageable pageable = PageRequest.of(pageIndex, Integer.parseInt(environment.getProperty("COUNT_ITEMS_IN_PAGE")));
         Map<String, Object> parameters = new HashMap<>();
         String baseQuery = "SELECT s FROM SuppliesInBox s WHERE s.box.boxId = :boxId ";
         parameters.put("boxId", boxId);

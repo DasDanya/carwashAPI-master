@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,6 +25,12 @@ public class FilesService {
      * @throws IOException если возникает ошибка при чтении файла
      */
     public byte[] getFile(String filePath) throws IOException {
+        try (InputStream resourceStream = getClass().getClassLoader().getResourceAsStream(filePath)) {
+            if (resourceStream != null) {
+                return resourceStream.readAllBytes();
+            }
+        }
+
         Path path = Paths.get(filePath);
 
         if(Files.exists(path)){
@@ -56,6 +63,9 @@ public class FilesService {
         byte[] imageAsBytes = image.getBytes();
         Path imagePath = Paths.get(destinationPath);
 
+        if(!Files.exists(imagePath.getParent())){
+            Files.createDirectories(imagePath.getParent());
+        }
         Files.write(imagePath,imageAsBytes);
     }
 
@@ -67,6 +77,10 @@ public class FilesService {
      */
     public void deleteFile(String filePath) throws IOException {
         Path path = Paths.get(filePath);
-        Files.deleteIfExists(path);
+        if(Files.exists(path)) {
+            Files.deleteIfExists(path);
+        }else{
+            throw new IOException("Не найден файл по указанному пути: " + filePath);
+        }
     }
 }

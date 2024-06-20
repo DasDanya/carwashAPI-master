@@ -1,6 +1,8 @@
 package ru.pin120.carwashAPI.services;
 
 import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -17,12 +19,14 @@ import java.util.Optional;
 @Service
 public class ClientService {
 
-    private static final int COUNT_CLIENTS_IN_PAGE = 12;
 
     /**
      * Репозиторий клиента
      */
     private final ClientRepository clientRepository;
+
+    @Autowired
+    private Environment environment;
 
     /**
      * Внедрений зависимости
@@ -38,7 +42,7 @@ public class ClientService {
      * @return Список клиентов
      */
     public List<Client> getByPage(Integer pageIndex) {
-        Pageable pageable = PageRequest.of(pageIndex, COUNT_CLIENTS_IN_PAGE, Sort.by("clSurname", "clName", "clPhone", "clDiscount"));
+        Pageable pageable = PageRequest.of(pageIndex, Integer.parseInt(environment.getProperty("COUNT_ITEMS_IN_PAGE")), Sort.by("clSurname", "clName", "clPhone", "clDiscount"));
         return clientRepository.findAll(pageable).getContent();
     }
 
@@ -80,7 +84,7 @@ public class ClientService {
      * @return Список найденных клиентов
      */
     public List<Client> search(Integer pageIndex, String surname, String name, String phone, Integer discount, String filterDiscountOperator) {
-        Pageable pageable = PageRequest.of(pageIndex, COUNT_CLIENTS_IN_PAGE, Sort.by("clSurname", "clName", "clPhone", "clDiscount"));
+        Pageable pageable = PageRequest.of(pageIndex, Integer.parseInt(environment.getProperty("COUNT_ITEMS_IN_PAGE")), Sort.by("clSurname", "clName", "clPhone", "clDiscount"));
         if(surname != null && name != null && phone != null && filterDiscountOperator != null && discount != null){
             switch (filterDiscountOperator){
                 case "<":

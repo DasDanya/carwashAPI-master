@@ -1,6 +1,8 @@
 package ru.pin120.carwashAPI.services;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -38,7 +40,8 @@ public class WorkScheduleService {
      */
     private final CleanerRepository cleanerRepository;
 
-    private final int COUNT_ITEMS_IN_PAGE = 31;
+    @Autowired
+    private Environment environment;
 
     /**
      * Внедрение зависимостей
@@ -69,7 +72,7 @@ public class WorkScheduleService {
      */
     public List<WorkSchedule> get(LocalDate startInterval, LocalDate endInterval, Long clrId, Integer pageIndex){
         if(pageIndex != null) {
-            Pageable pageable = PageRequest.of(pageIndex, COUNT_ITEMS_IN_PAGE, Sort.by("wsWorkDay"));
+            Pageable pageable = PageRequest.of(pageIndex, Integer.parseInt(environment.getProperty("COUNT_ITEMS_IN_PAGE_WORKSCHEDULE")), Sort.by("wsWorkDay"));
             return workScheduleRepository.get(startInterval, endInterval, clrId, pageable);
         }else{
             return workScheduleRepository.get(startInterval,endInterval,clrId);

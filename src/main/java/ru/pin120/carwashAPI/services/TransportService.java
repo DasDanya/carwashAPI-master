@@ -1,6 +1,8 @@
 package ru.pin120.carwashAPI.services;
 
 import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -18,12 +20,16 @@ import java.util.Optional;
 @Service
 public class TransportService {
 
-    private static final int COUNT_TRANSPORT_IN_PAGE = 12;
+
 
     /**
      * Репозиторий транспорта
      */
     private final TransportRepository transportRepository;
+
+    @Autowired
+    private Environment environment;
+
 
     /**
      * Внедрение зависимости
@@ -39,7 +45,7 @@ public class TransportService {
      * @return Список транспорта
      */
     public List<Transport> getByPage(Integer pageIndex){
-        Pageable pageable = PageRequest.of(pageIndex, COUNT_TRANSPORT_IN_PAGE, Sort.by( "trMark", "trModel", "categoryOfTransport.catTrName"));
+        Pageable pageable = PageRequest.of(pageIndex, Integer.parseInt(environment.getProperty("COUNT_ITEMS_IN_PAGE")), Sort.by( "trMark", "trModel", "categoryOfTransport.catTrName"));
 
         return transportRepository.findAll(pageable).getContent();
     }
@@ -99,7 +105,7 @@ public class TransportService {
      * @return Список найденного транспорта
      */
     public List<Transport> search(Integer pageIndex, String category, String mark, String model) {
-        Pageable pageable = PageRequest.of(pageIndex, COUNT_TRANSPORT_IN_PAGE, Sort.by( "trMark", "trModel", "categoryOfTransport.catTrName"));
+        Pageable pageable = PageRequest.of(pageIndex, Integer.parseInt(environment.getProperty("COUNT_ITEMS_IN_PAGE")), Sort.by( "trMark", "trModel", "categoryOfTransport.catTrName"));
         if(mark != null && model != null && category != null){
             return transportRepository.findByMarkAndModelAndCategory(mark,model,category,pageable);
         }else if(mark != null && model != null){

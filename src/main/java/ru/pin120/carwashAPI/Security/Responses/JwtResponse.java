@@ -12,9 +12,12 @@ import ru.pin120.carwashAPI.models.User;
 @Getter
 public class JwtResponse {
 
+    /**
+     * Схема аутентификации
+     */
     private final String type = "Bearer";
     /**
-     * Токен
+     * JWT токен
      */
     private String token;
     /**

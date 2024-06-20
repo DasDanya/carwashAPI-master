@@ -3,6 +3,8 @@ package ru.pin120.carwashAPI.services;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -25,9 +27,6 @@ import java.util.Optional;
 @Service
 public class SupplyService {
 
-    private final int COUNT_ITEMS_IN_PAGE = 12;
-    private static final String PATH_TO_PHOTOS= "src/main/resources/static/images/supplies/";
-    private static final String NAME_DEFAULT_PHOTO = "noPhoto.jpeg";
 
     /**
      * Репозиторий расходных материалов
@@ -40,6 +39,9 @@ public class SupplyService {
 
     @PersistenceContext
     private EntityManager entityManager;
+
+    @Autowired
+    private Environment environment;
 
     /**
      * Внедрение зависимостей
@@ -57,7 +59,7 @@ public class SupplyService {
      * @return Список расходных материалов
      */
     public List<Supply> get(Integer pageIndex) {
-        Pageable pageable = PageRequest.of(pageIndex, COUNT_ITEMS_IN_PAGE, Sort.by( "category.cSupName", "supName", "supCount"));
+        Pageable pageable = PageRequest.of(pageIndex, Integer.parseInt(environment.getProperty("COUNT_ITEMS_IN_PAGE")), Sort.by( "category.cSupName", "supName", "supCount"));
         return supplyRepository.findAll(pageable).getContent();
     }
 
@@ -71,7 +73,7 @@ public class SupplyService {
      * @return Список найденных расходных материалов
      */
     public List<Supply> search(Integer pageIndex, String supName, String supCategory, String operator, Integer supCount) {
-        Pageable pageable = PageRequest.of(pageIndex, COUNT_ITEMS_IN_PAGE);
+        Pageable pageable = PageRequest.of(pageIndex, Integer.parseInt(environment.getProperty("COUNT_ITEMS_IN_PAGE")));
         String baseQuery = "SELECT s FROM Supply s";
         String partQuery = "";
         Map<String, Object> parameters = new HashMap<>();
@@ -131,13 +133,13 @@ public class SupplyService {
     public void create(Supply supply, MultipartFile photo) throws IOException {
         boolean saveDefaultPhoto = photo == null;
         if(saveDefaultPhoto){
-            supply.setSupPhotoName(NAME_DEFAULT_PHOTO);
+            supply.setSupPhotoName(environment.getProperty("NAME_DEFAULT_PHOTO_SUPPLY"));
             supplyRepository.save(supply);
         }else{
             if(filesService.isImage(photo)) {
                 supplyRepository.save(supply);
                 String photoName = supply.getSupId() + photo.getOriginalFilename().substring(photo.getOriginalFilename().lastIndexOf('.'));
-                filesService.saveImage(photo, PATH_TO_PHOTOS + photoName);
+                filesService.saveImage(photo, environment.getProperty("PATH_TO_PHOTOS_SUPPLY") + photoName);
                 supply.setSupPhotoName(photoName);
                 supplyRepository.save(supply);
             }else{
@@ -161,7 +163,7 @@ public class SupplyService {
      * @throws IOException если произошда ошибка получения фотографии
      */
     public byte[] getPhoto(String photoName) throws IOException {
-        return filesService.getFile(PATH_TO_PHOTOS + photoName);
+        return filesService.getFile(environment.getProperty("PATH_TO_PHOTOS_SUPPLY") + photoName);
     }
 
     /**
@@ -182,8 +184,8 @@ public class SupplyService {
     public void delete(Supply supply) throws IOException {
         String filename = supply.getSupPhotoName();
         supplyRepository.delete(supply);
-        if(!filename.equals(NAME_DEFAULT_PHOTO)){
-            filesService.deleteFile(PATH_TO_PHOTOS + filename);
+        if(!filename.equals(environment.getProperty("NAME_DEFAULT_PHOTO_SUPPLY"))){
+            filesService.deleteFile(environment.getProperty("PATH_TO_PHOTOS_SUPPLY") + filename);
         }
 
     }
@@ -199,11 +201,11 @@ public class SupplyService {
         existedSupply.setSupCount(supply.getSupCount());
         if(photo != null){
             if(filesService.isImage(photo)){
-                if(!existedSupply.getSupPhotoName().equals(NAME_DEFAULT_PHOTO)){
-                    filesService.deleteFile(PATH_TO_PHOTOS + existedSupply.getSupPhotoName());
+                if(!existedSupply.getSupPhotoName().equals(environment.getProperty("NAME_DEFAULT_PHOTO_SUPPLY"))){
+                    filesService.deleteFile(environment.getProperty("PATH_TO_PHOTOS_SUPPLY") + existedSupply.getSupPhotoName());
                 }
                 String photoName = existedSupply.getSupId() + photo.getOriginalFilename().substring(photo.getOriginalFilename().lastIndexOf('.'));
-                filesService.saveImage(photo, PATH_TO_PHOTOS + photoName);
+                filesService.saveImage(photo, environment.getProperty("PATH_TO_PHOTOS_SUPPLY") + photoName);
                 existedSupply.setSupPhotoName(photoName);
             }else{
                 throw new FileIsNotImageException("Файл не является изображением");

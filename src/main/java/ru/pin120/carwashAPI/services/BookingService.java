@@ -4,6 +4,8 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -48,11 +50,8 @@ public class BookingService {
      */
     private final PriceListService priceListService;
 
-    private final LocalTime START_WORK_TIME = LocalTime.of(8,0);
-    private final LocalTime END_WORK_TIME = LocalTime.of(20, 0);
-    private static final double CLEANER_STAKE = 0.3;
-
-    private final int COUNT_ITEMS_IN_PAGE = 12;
+    @Autowired
+    private Environment environment;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -92,6 +91,9 @@ public class BookingService {
      */
     @Transactional
     public Booking create(@Valid BookingDTO booking) {
+        LocalTime startWorkTime = LocalTime.parse(environment.getProperty("START_WORK_TIME"));
+        LocalTime endWorkTime = LocalTime.parse(environment.getProperty("END_WORK_TIME"));
+
         LocalDate now = LocalDate.now();
         if(!booking.getBkStartTime().isBefore(booking.getBkEndTime())){
             throw new IllegalArgumentException("Время окончания выполнения заказа должно быть позже времени начала выполнения");
@@ -104,17 +106,17 @@ public class BookingService {
         }
         LocalTime bkEndTime = LocalTime.of(booking.getBkEndTime().getHour(), booking.getBkEndTime().getMinute());
         LocalTime bkStartTime = LocalTime.of(booking.getBkStartTime().getHour(), booking.getBkStartTime().getMinute());
-        if(bkStartTime.isBefore(START_WORK_TIME)){
-            throw new IllegalArgumentException("Время начала заказа не может быть раньше " + START_WORK_TIME);
+        if(bkStartTime.isBefore(LocalTime.parse(environment.getProperty("START_WORK_TIME")))){
+            throw new IllegalArgumentException("Время начала заказа не может быть раньше " + startWorkTime);
         }
-        if(bkEndTime.isBefore(START_WORK_TIME)){
-            throw new IllegalArgumentException("Время окончания заказа не может быть раньше " + START_WORK_TIME);
+        if(bkEndTime.isBefore(startWorkTime)){
+            throw new IllegalArgumentException("Время окончания заказа не может быть раньше " + startWorkTime);
         }
-        if(!bkStartTime.isBefore(END_WORK_TIME)){
-            throw new IllegalArgumentException("Время начала заказа не может быть позднее " + END_WORK_TIME.minusMinutes(1));
+        if(!bkStartTime.isBefore(endWorkTime)){
+            throw new IllegalArgumentException("Время начала заказа не может быть позднее " + endWorkTime.minusMinutes(1));
         }
-        if(bkEndTime.isAfter(END_WORK_TIME)){
-            throw new IllegalArgumentException("Время окончания заказа не может быть позднее " + END_WORK_TIME);
+        if(bkEndTime.isAfter(endWorkTime)){
+            throw new IllegalArgumentException("Время окончания заказа не может быть позднее " + endWorkTime);
         }
         if(booking.getBox().getBoxStatus() == BoxStatus.CLOSED){
             throw new IllegalArgumentException(String.format("Нельзя сформировать заказ, так как бокс %d закрыт", booking.getBox().getBoxId()));
@@ -313,22 +315,25 @@ public class BookingService {
      */
     @Transactional
     public void edit(Booking existedBooking, BookingDTO booking) {
+        LocalTime startWorkTime = LocalTime.parse(environment.getProperty("START_WORK_TIME"));
+        LocalTime endWorkTime = LocalTime.parse(environment.getProperty("END_WORK_TIME"));
+
         if(!booking.getBkStartTime().isBefore(booking.getBkEndTime())){
             throw new IllegalArgumentException("Время окончания выполнения заказа должно быть позже времени начала выполнения");
         }
         LocalTime bkEndTime = LocalTime.of(booking.getBkEndTime().getHour(), booking.getBkEndTime().getMinute());
         LocalTime bkStartTime = LocalTime.of(booking.getBkStartTime().getHour(), booking.getBkStartTime().getMinute());
-        if(bkStartTime.isBefore(START_WORK_TIME)){
-            throw new IllegalArgumentException("Время начала заказа не может быть раньше " + START_WORK_TIME);
+        if(bkStartTime.isBefore(startWorkTime)){
+            throw new IllegalArgumentException("Время начала заказа не может быть раньше " + startWorkTime);
         }
-        if(bkEndTime.isBefore(START_WORK_TIME)){
-            throw new IllegalArgumentException("Время окончания заказа не может быть раньше " + START_WORK_TIME);
+        if(bkEndTime.isBefore(startWorkTime)){
+            throw new IllegalArgumentException("Время окончания заказа не может быть раньше " + startWorkTime);
         }
-        if(!bkStartTime.isBefore(END_WORK_TIME)){
-            throw new IllegalArgumentException("Время начала заказа не может быть позднее " + END_WORK_TIME.minusMinutes(1));
+        if(!bkStartTime.isBefore(endWorkTime)){
+            throw new IllegalArgumentException("Время начала заказа не может быть позднее " + endWorkTime.minusMinutes(1));
         }
-        if(bkEndTime.isAfter(END_WORK_TIME)){
-            throw new IllegalArgumentException("Время окончания заказа не может быть позднее " + END_WORK_TIME);
+        if(bkEndTime.isAfter(endWorkTime)){
+            throw new IllegalArgumentException("Время окончания заказа не может быть позднее " + endWorkTime);
         }
         if(booking.getBox().getBoxStatus() == BoxStatus.CLOSED){
             throw new IllegalArgumentException(String.format("Нельзя изменить заказ, так как бокс %d закрыт", booking.getBox().getBoxId()));
@@ -467,8 +472,8 @@ public class BookingService {
      * @return Список заказов
      */
     public List<Booking> getClientBookings(Integer pageIndex, Long cleanerId, Long clientId, Long boxId, LocalDateTime startInterval, LocalDateTime endInterval, BookingStatus bookingStatus, String compareOperator, Integer price) {
-
-        Pageable pageable = PageRequest.of(pageIndex, COUNT_ITEMS_IN_PAGE);
+        int countItemsInPage = Integer.parseInt(environment.getProperty("COUNT_ITEMS_IN_PAGE"));
+        Pageable pageable = PageRequest.of(pageIndex, countItemsInPage);
         TypedQuery<Booking> query = createQuery(cleanerId, clientId, boxId, startInterval, endInterval, bookingStatus, compareOperator, price);
         query.setFirstResult((int) pageable.getOffset());
         query.setMaxResults(pageable.getPageSize());
@@ -550,10 +555,11 @@ public class BookingService {
      * @return Информация о работе мойщика
      */
     private BookingsInfoDTO getSummary(List<Booking> bookings) {
+        double cleanerStake = Double.valueOf(environment.getProperty("CLEANER_STAKE"));
         int count = bookings.size();
         int totalCost = (int) Math.ceil(bookings.stream()
                 .mapToInt(Booking::getBkPrice)
-                .sum() * CLEANER_STAKE);
+                .sum() * cleanerStake);
         return new BookingsInfoDTO(count, totalCost);
     }
 }
